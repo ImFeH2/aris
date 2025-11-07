@@ -1,5 +1,7 @@
 mod matrix;
 
+pub use matrix::Matrix;
+
 #[cfg(test)]
 mod tests {
     use crate::{mat, matrix::Matrix};

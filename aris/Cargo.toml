@@ -2,6 +2,14 @@
 name = "aris"
 version = "0.1.0"
 edition = "2024"
+authors = ["ImFeH2 <i@feh2.im>"]
+description = "A mathematical computing library"
+repository = "https://github.com/ImFeH2/aris"
+documentation = "https://docs.rs/aris"
+license = "Apache-2.0"
+readme = "../README.md"
+keywords = ["mathematics", "math", "numeric", "computing"]
+categories = ["mathematics", "algorithms"]
 
 [dependencies]
 num-traits = "0.2"
