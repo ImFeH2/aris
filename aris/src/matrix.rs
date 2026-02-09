@@ -1,286 +1,178 @@
-use num_traits::{Num, real::Real};
-use std::ops::{Add, Index, IndexMut, Mul, Sub};
+mod mat;
+mod mat_mut;
+mod mat_ref;
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Matrix<T>
-where
-    T: Num + Clone,
-{
-    rows: usize,
-    cols: usize,
+#[cfg(test)]
+mod test;
+
+use std::marker::PhantomData;
+
+pub struct Mat<T> {
     data: Vec<T>,
+    nrows: usize,
+    ncols: usize,
+    col_stride: usize,
 }
 
-impl<T> Matrix<T>
-where
-    T: Num + Clone,
-{
-    pub fn zeros((rows, cols): (usize, usize)) -> Self {
-        Matrix {
-            rows,
-            cols,
-            data: vec![T::zero(); rows * cols],
-        }
+pub struct MatRef<'a, T> {
+    ptr: *const T,
+    nrows: usize,
+    ncols: usize,
+    row_stride: isize,
+    col_stride: isize,
+    _marker: PhantomData<&'a T>,
+}
+
+impl<T> Copy for MatRef<'_, T> {}
+
+impl<T> Clone for MatRef<'_, T> {
+    fn clone(&self) -> Self {
+        *self
     }
 }
 
-impl<T> Matrix<T>
-where
-    T: Num + Clone,
-{
-    pub fn from_vec((rows, cols): (usize, usize), data: Vec<T>) -> Self {
-        assert_eq!(data.len(), rows * cols);
-        Matrix { rows, cols, data }
+unsafe impl<T: Sync> Send for MatRef<'_, T> {}
+unsafe impl<T: Sync> Sync for MatRef<'_, T> {}
+
+pub struct MatMut<'a, T> {
+    ptr: *mut T,
+    nrows: usize,
+    ncols: usize,
+    row_stride: isize,
+    col_stride: isize,
+    _marker: PhantomData<&'a mut T>,
+}
+
+unsafe impl<T: Send> Send for MatMut<'_, T> {}
+unsafe impl<T: Sync> Sync for MatMut<'_, T> {}
+
+pub struct ColIter<'a, T> {
+    matrix: MatRef<'a, T>,
+    col: usize,
+}
+
+pub struct ColIterMut<'a, T> {
+    ptr: *mut T,
+    nrows: usize,
+    ncols: usize,
+    row_stride: isize,
+    col_stride: isize,
+    col: usize,
+    _marker: PhantomData<&'a mut T>,
+}
+
+pub struct RowIter<'a, T> {
+    matrix: MatRef<'a, T>,
+    row: usize,
+}
+
+pub struct RowIterMut<'a, T> {
+    ptr: *mut T,
+    nrows: usize,
+    ncols: usize,
+    row_stride: isize,
+    col_stride: isize,
+    row: usize,
+    _marker: PhantomData<&'a mut T>,
+}
+
+pub struct DiagIter<'a, T> {
+    matrix: MatRef<'a, T>,
+    index: usize,
+    length: usize,
+}
+
+pub struct MatEnumerate<'a, T> {
+    matrix: MatRef<'a, T>,
+    index: usize,
+    length: usize,
+}
+
+pub(crate) fn fmt_matrix<T: std::fmt::Display>(
+    matrix: MatRef<'_, T>,
+    f: &mut std::fmt::Formatter<'_>,
+) -> std::fmt::Result {
+    if matrix.nrows == 0 || matrix.ncols == 0 {
+        return write!(f, "[]");
     }
-
-    pub fn from_nested_vec(nested_data: Vec<Vec<T>>) -> Self {
-        let rows = nested_data.len();
-        let cols = if rows > 0 { nested_data[0].len() } else { 0 };
-
-        #[cfg(debug_assertions)]
-        for (i, row) in nested_data.iter().enumerate() {
-            assert_eq!(
-                row.len(),
-                cols,
-                "Row {} has {} elements, expected {}",
-                i,
-                row.len(),
-                cols
-            );
+    write!(f, "[")?;
+    for i in 0..matrix.nrows {
+        if i > 0 {
+            write!(f, " ")?;
         }
-
-        let data: Vec<T> = nested_data.into_iter().flatten().collect();
-        Matrix { rows, cols, data }
-    }
-
-    pub fn from_value((rows, cols): (usize, usize), value: T) -> Self {
-        Matrix {
-            rows,
-            cols,
-            data: vec![value; rows * cols],
-        }
-    }
-
-    pub fn from_fn<F>((rows, cols): (usize, usize), mut f: F) -> Self
-    where
-        F: FnMut(usize, usize) -> T,
-    {
-        let mut data: Vec<T> = Vec::with_capacity(rows * cols);
-        for i in 0..rows {
-            for j in 0..cols {
-                data.push(f(i, j));
+        write!(f, "[")?;
+        for j in 0..matrix.ncols {
+            if j > 0 {
+                write!(f, ", ")?;
             }
+            write!(f, "{}", matrix.at(i, j))?;
         }
-        Matrix { rows, cols, data }
+        write!(f, "]")?;
+        if i < matrix.nrows - 1 {
+            writeln!(f, ",")?;
+        }
     }
+    write!(f, "]")
+}
 
-    pub fn get(&self, (row, col): (usize, usize)) -> Option<&T> {
-        self.data.get(row * self.cols + col)
-    }
-
-    pub fn rows(&self) -> usize {
-        self.rows
-    }
-
-    pub fn cols(&self) -> usize {
-        self.cols
-    }
-
-    pub fn transpose(&self) -> Matrix<T> {
-        let mut data: Vec<T> = Vec::with_capacity(self.rows * self.cols);
-
-        for j in 0..self.cols {
-            for i in 0..self.rows {
-                data.push(self[(i, j)].clone());
+pub(crate) fn fmt_matrix_debug<T: std::fmt::Debug>(
+    type_name: &str,
+    matrix: MatRef<'_, T>,
+    f: &mut std::fmt::Formatter<'_>,
+) -> std::fmt::Result {
+    write!(f, "{}({}x{}, [", type_name, matrix.nrows, matrix.ncols)?;
+    for i in 0..matrix.nrows {
+        if i > 0 {
+            write!(f, ", ")?;
+        }
+        write!(f, "[")?;
+        for j in 0..matrix.ncols {
+            if j > 0 {
+                write!(f, ", ")?;
             }
+            write!(f, "{:?}", matrix.at(i, j))?;
         }
-
-        Matrix::from_vec((self.cols, self.rows), data)
+        write!(f, "]")?;
     }
-
-    pub fn dot(&self, other: &Matrix<T>) -> Matrix<T> {
-        assert_eq!(self.cols, other.rows);
-
-        let mut data: Vec<T> = Vec::with_capacity(self.rows * other.cols);
-
-        for i in 0..self.rows {
-            for j in 0..other.cols {
-                let mut sum = T::zero();
-                for k in 0..self.cols {
-                    sum = sum + self[(i, k)].clone() * other[(k, j)].clone();
-                }
-                data.push(sum);
-            }
-        }
-
-        Matrix::from_vec((self.rows, other.cols), data)
-    }
-
-    pub fn component_mul(&self, other: &Matrix<T>) -> Matrix<T> {
-        assert_eq!(self.rows, other.rows);
-        assert_eq!(self.cols, other.cols);
-
-        let data: Vec<T> = self
-            .data
-            .iter()
-            .zip(other.data.iter())
-            .map(|(a, b)| a.clone() * b.clone())
-            .collect();
-
-        Matrix::from_vec((self.rows, self.cols), data)
-    }
+    write!(f, "])")
 }
-
-impl<T> Matrix<T>
-where
-    T: Real,
-{
-    pub fn norm(&self) -> T {
-        let mut sum = T::zero();
-        for value in &self.data {
-            sum = sum + *value * *value;
-        }
-        sum.sqrt()
-    }
-}
-
-impl<T> std::fmt::Display for Matrix<T>
-where
-    T: Num + Clone + std::fmt::Display,
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for i in 0..self.rows {
-            for j in 0..self.cols {
-                write!(f, "{} ", self[(i, j)])?;
-            }
-            writeln!(f)?;
-        }
-        Ok(())
-    }
-}
-
-impl<T> Index<(usize, usize)> for Matrix<T>
-where
-    T: Num + Clone,
-{
-    type Output = T;
-
-    fn index(&self, (row, col): (usize, usize)) -> &Self::Output {
-        &self.data[row * self.cols + col]
-    }
-}
-
-impl<T> IndexMut<(usize, usize)> for Matrix<T>
-where
-    T: Num + Clone,
-{
-    fn index_mut(&mut self, (row, col): (usize, usize)) -> &mut Self::Output {
-        &mut self.data[row * self.cols + col]
-    }
-}
-
-impl<T> Add<&Matrix<T>> for &Matrix<T>
-where
-    T: Num + Clone,
-{
-    type Output = Matrix<T>;
-
-    fn add(self, rhs: &Matrix<T>) -> Self::Output {
-        assert_eq!(self.rows, rhs.rows);
-        assert_eq!(self.cols, rhs.cols);
-
-        let data: Vec<T> = self
-            .data
-            .iter()
-            .zip(rhs.data.iter())
-            .map(|(a, b)| a.clone() + b.clone())
-            .collect();
-
-        Matrix::from_vec((self.rows, self.cols), data)
-    }
-}
-
-impl<T> Sub<&Matrix<T>> for &Matrix<T>
-where
-    T: Num + Clone,
-{
-    type Output = Matrix<T>;
-
-    fn sub(self, rhs: &Matrix<T>) -> Self::Output {
-        assert_eq!(self.rows, rhs.rows);
-        assert_eq!(self.cols, rhs.cols);
-
-        let data: Vec<T> = self
-            .data
-            .iter()
-            .zip(rhs.data.iter())
-            .map(|(a, b)| a.clone() - b.clone())
-            .collect();
-
-        Matrix::from_vec((self.rows, self.cols), data)
-    }
-}
-
-impl<T> Mul<&Matrix<T>> for &Matrix<T>
-where
-    T: Num + Clone,
-{
-    type Output = Matrix<T>;
-
-    fn mul(self, rhs: &Matrix<T>) -> Self::Output {
-        self.dot(rhs)
-    }
-}
-
-macro_rules! derive_binary_op {
-    ($trait_name:ident, $method:ident, $operator:tt) => {
-        impl<T> $trait_name<Matrix<T>> for Matrix<T>
-        where
-            T: Num + Clone,
-        {
-            type Output = Matrix<T>;
-
-            fn $method(self, rhs: Matrix<T>) -> Self::Output {
-                &self $operator &rhs
-            }
-        }
-
-        impl<T> $trait_name<&Matrix<T>> for Matrix<T>
-        where
-            T: Num + Clone,
-        {
-            type Output = Matrix<T>;
-
-            fn $method(self, rhs: &Matrix<T>) -> Self::Output {
-                &self $operator rhs
-            }
-        }
-
-        impl<T> $trait_name<Matrix<T>> for &Matrix<T>
-        where
-            T: Num + Clone,
-        {
-            type Output = Matrix<T>;
-
-            fn $method(self, rhs: Matrix<T>) -> Self::Output {
-                self $operator &rhs
-            }
-        }
-    };
-}
-
-derive_binary_op!(Add, add, +);
-derive_binary_op!(Sub, sub, -);
-derive_binary_op!(Mul, mul, *);
 
 #[macro_export]
 macro_rules! mat {
-    [$elem:expr; $rows:expr, $cols:expr] => {{
-        Matrix::from_value(($rows, $cols), $elem)
+    [$([$($elem:expr),* $(,)?]),+ $(,)?] => {{
+        $crate::matrix::Mat::from_rows(&[$(&[$($elem),*][..]),+])
     }};
 
-    [$([$($elem:expr),* $(,)?]),+ $(,)?] => {{
-        let nested_vec = vec![$(vec![$($elem),*]),+];
-        Matrix::from_nested_vec(nested_vec)
+    ({$($block0:expr),+ $(,)?} $(, {$($block:expr),+ $(,)?})* $(,)?) => {{
+        $crate::matrix::Mat::from_blocks(&[
+            &[$(($block0).as_ref()),+][..],
+            $(&[$(($block).as_ref()),+][..]),*
+        ])
+    }};
+
+    [$elem:expr; $nrows:expr, $ncols:expr] => {{
+        $crate::matrix::Mat::full($nrows, $ncols, $elem)
+    }};
+
+    ($nrows:expr, $ncols:expr, $f:expr) => {{
+        $crate::matrix::Mat::from_fn($nrows, $ncols, $f)
+    }};
+}
+
+#[macro_export]
+macro_rules! col {
+    [$($elem:expr),* $(,)?] => {{
+        let data = vec![$($elem),*];
+        let n = data.len();
+        $crate::matrix::Mat::from_col_major(n, 1, data)
+    }};
+}
+
+#[macro_export]
+macro_rules! row {
+    [$($elem:expr),* $(,)?] => {{
+        let data = vec![$($elem),*];
+        let n = data.len();
+        $crate::matrix::Mat::from_col_major(1, n, data)
     }};
 }
