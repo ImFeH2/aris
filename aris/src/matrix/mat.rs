@@ -101,7 +101,7 @@ impl<T> Mat<T> {
         }
     }
 
-    pub fn from_col_major(nrows: usize, ncols: usize, data: Vec<T>) -> Self {
+    pub fn from_vec_col(nrows: usize, ncols: usize, data: Vec<T>) -> Self {
         assert_eq!(
             data.len(),
             nrows * ncols,
@@ -147,7 +147,7 @@ impl<T: Clone> Mat<T> {
         }
     }
 
-    pub fn from_row_major(nrows: usize, ncols: usize, data: Vec<T>) -> Self {
+    pub fn from_vec_row(nrows: usize, ncols: usize, data: Vec<T>) -> Self {
         assert_eq!(
             data.len(),
             nrows * ncols,
@@ -302,7 +302,7 @@ impl<T: Clone> Mat<T> {
             }
         }
 
-        Mat::from_col_major(total_rows, total_cols, data)
+        Mat::from_vec_col(total_rows, total_cols, data)
     }
 }
 

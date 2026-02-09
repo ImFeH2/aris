@@ -67,7 +67,7 @@ impl<'a, T> MatRef<'a, T> {
                 data.push(self.at(i, j).clone());
             }
         }
-        Mat::from_col_major(self.nrows, self.ncols, data)
+        Mat::from_vec_col(self.nrows, self.ncols, data)
     }
 
     pub fn col_iter(self) -> ColIter<'a, T> {

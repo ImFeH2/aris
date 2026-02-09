@@ -164,7 +164,7 @@ macro_rules! col {
     [$($elem:expr),* $(,)?] => {{
         let data = vec![$($elem),*];
         let n = data.len();
-        $crate::matrix::Mat::from_col_major(n, 1, data)
+        $crate::matrix::Mat::from_vec_col(n, 1, data)
     }};
 }
 
@@ -173,6 +173,6 @@ macro_rules! row {
     [$($elem:expr),* $(,)?] => {{
         let data = vec![$($elem),*];
         let n = data.len();
-        $crate::matrix::Mat::from_col_major(1, n, data)
+        $crate::matrix::Mat::from_vec_row(1, n, data)
     }};
 }

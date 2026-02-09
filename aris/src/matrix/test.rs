@@ -114,8 +114,8 @@ fn diag_creates_diagonal_matrix() {
 }
 
 #[test]
-fn from_col_major_stores_correctly() {
-    let m = Mat::from_col_major(2, 3, vec![1, 2, 3, 4, 5, 6]);
+fn from_vec_col_stores_correctly() {
+    let m = Mat::from_vec_col(2, 3, vec![1, 2, 3, 4, 5, 6]);
     assert_eq!(m.shape(), (2, 3));
     assert_eq!(m[(0, 0)], 1);
     assert_eq!(m[(1, 0)], 2);
@@ -127,8 +127,8 @@ fn from_col_major_stores_correctly() {
 }
 
 #[test]
-fn from_row_major_converts_to_col_major() {
-    let m = Mat::from_row_major(2, 3, vec![1, 2, 3, 4, 5, 6]);
+fn from_vec_row_converts_to_vec_col() {
+    let m = Mat::from_vec_row(2, 3, vec![1, 2, 3, 4, 5, 6]);
     assert_eq!(m.shape(), (2, 3));
     assert_eq!(m[(0, 0)], 1);
     assert_eq!(m[(0, 1)], 2);
@@ -189,14 +189,14 @@ fn from_cols_empty() {
 
 #[test]
 #[should_panic(expected = "Data length")]
-fn from_col_major_panics_on_wrong_length() {
-    Mat::from_col_major(2, 3, vec![1, 2, 3]);
+fn from_vec_col_panics_on_wrong_length() {
+    Mat::from_vec_col(2, 3, vec![1, 2, 3]);
 }
 
 #[test]
 #[should_panic(expected = "Data length")]
-fn from_row_major_panics_on_wrong_length() {
-    Mat::from_row_major(2, 3, vec![1, 2, 3, 4, 5]);
+fn from_vec_row_panics_on_wrong_length() {
+    Mat::from_vec_row(2, 3, vec![1, 2, 3, 4, 5]);
 }
 
 #[test]
@@ -780,14 +780,14 @@ fn identity_diagonal_values() {
 #[test]
 fn from_rows_equals_from_row_major() {
     let a = Mat::from_rows(&[&[1, 2, 3], &[4, 5, 6]]);
-    let b = Mat::from_row_major(2, 3, vec![1, 2, 3, 4, 5, 6]);
+    let b = Mat::from_vec_row(2, 3, vec![1, 2, 3, 4, 5, 6]);
     assert_eq!(a, b);
 }
 
 #[test]
 fn from_cols_equals_from_col_major() {
     let a = Mat::from_cols(&[&[1, 4], &[2, 5], &[3, 6]]);
-    let b = Mat::from_col_major(2, 3, vec![1, 4, 2, 5, 3, 6]);
+    let b = Mat::from_vec_col(2, 3, vec![1, 4, 2, 5, 3, 6]);
     assert_eq!(a, b);
 }
 
