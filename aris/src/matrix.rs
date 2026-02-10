@@ -143,19 +143,21 @@ macro_rules! mat {
         $crate::matrix::Mat::from_rows(&[$(&[$($elem),*][..]),+])
     }};
 
-    ({$($block0:expr),+ $(,)?} $(, {$($block:expr),+ $(,)?})* $(,)?) => {{
-        $crate::matrix::Mat::from_blocks(&[
-            &[$(($block0).as_ref()),+][..],
-            $(&[$(($block).as_ref()),+][..]),*
-        ])
-    }};
-
     [$elem:expr; $nrows:expr, $ncols:expr] => {{
         $crate::matrix::Mat::full($nrows, $ncols, $elem)
     }};
 
     ($nrows:expr, $ncols:expr, $f:expr) => {{
         $crate::matrix::Mat::from_fn($nrows, $ncols, $f)
+    }};
+}
+
+#[macro_export]
+macro_rules! block {
+    [$([$($block:expr),+ $(,)?]),+ $(,)?] => {{
+        $crate::matrix::Mat::from_blocks(&[
+            $(&[$(($block).as_ref()),+][..]),+
+        ])
     }};
 }
 

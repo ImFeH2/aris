@@ -1,5 +1,5 @@
 use super::*;
-use crate::{col, mat, row};
+use crate::{block, col, mat, row};
 
 #[test]
 fn new_creates_empty_matrix() {
@@ -791,7 +791,7 @@ fn from_cols_equals_from_col_major() {
     assert_eq!(a, b);
 }
 
-// --- Block Matrix (from_blocks / mat!{{...}}) ---
+// --- Block Matrix (from_blocks / block!) ---
 
 #[test]
 fn from_blocks_2x2() {
@@ -869,50 +869,50 @@ fn from_blocks_inconsistent_col_widths() {
 }
 
 #[test]
-fn mat_block_macro_2x2() {
+fn block_macro_2x2() {
     let a = mat![[1, 2], [3, 4]];
     let b = mat![[5], [6]];
     let c = mat![[7, 8]];
     let d = mat![[9]];
 
-    let m = mat! {{a, b}, {c, d}};
+    let m = block![[a, b], [c, d]];
     let expected = mat![[1, 2, 5], [3, 4, 6], [7, 8, 9]];
     assert_eq!(m, expected);
 }
 
 #[test]
-fn mat_block_macro_single_row() {
+fn block_macro_single_row() {
     let a = mat![[1, 2], [3, 4]];
     let b = mat![[5, 6], [7, 8]];
-    let m = mat! {{a, b}};
+    let m = block![[a, b]];
     let expected = mat![[1, 2, 5, 6], [3, 4, 7, 8]];
     assert_eq!(m, expected);
 }
 
 #[test]
-fn mat_block_macro_single_column() {
+fn block_macro_single_column() {
     let a = mat![[1, 2]];
     let b = mat![[3, 4]];
     let c = mat![[5, 6]];
-    let m = mat! {{a}, {b}, {c}};
+    let m = block![[a], [b], [c]];
     let expected = mat![[1, 2], [3, 4], [5, 6]];
     assert_eq!(m, expected);
 }
 
 #[test]
-fn mat_block_macro_with_identity() {
+fn block_macro_with_identity() {
     let eye: Mat<i32> = Mat::identity(2);
     let z: Mat<i32> = Mat::zeros(2, 2);
-    let m = mat! {{eye, z}};
+    let m = block![[eye, z]];
     let expected = mat![[1, 0, 0, 0], [0, 1, 0, 0]];
     assert_eq!(m, expected);
 }
 
 #[test]
-fn mat_block_macro_trailing_comma() {
+fn block_macro_trailing_comma() {
     let a = mat![[1, 2], [3, 4]];
     let b = mat![[5, 6], [7, 8]];
-    let m = mat! {{a, b,}, {b, a,},};
+    let m = block![[a, b,], [b, a,],];
     let expected = mat![[1, 2, 5, 6], [3, 4, 7, 8], [5, 6, 1, 2], [7, 8, 3, 4]];
     assert_eq!(m, expected);
 }
