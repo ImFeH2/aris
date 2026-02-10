@@ -1198,3 +1198,877 @@ fn property_predicates_on_mat_mut() {
     assert!(v.is_lower_triangular());
     assert!(v.is_identity());
 }
+
+// --- Row/Col Views ---
+
+#[test]
+fn row_view() {
+    let m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    let r = m.row(1);
+    assert_eq!(r.shape(), (1, 3));
+    assert_eq!(r[(0, 0)], 4);
+    assert_eq!(r[(0, 1)], 5);
+    assert_eq!(r[(0, 2)], 6);
+}
+
+#[test]
+fn col_view() {
+    let m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    let c = m.col(2);
+    assert_eq!(c.shape(), (3, 1));
+    assert_eq!(c[(0, 0)], 3);
+    assert_eq!(c[(1, 0)], 6);
+    assert_eq!(c[(2, 0)], 9);
+}
+
+#[test]
+fn row_view_first_and_last() {
+    let m = mat![[1, 2], [3, 4], [5, 6]];
+    let first = m.row(0);
+    assert_eq!(first[(0, 0)], 1);
+    assert_eq!(first[(0, 1)], 2);
+    let last = m.row(2);
+    assert_eq!(last[(0, 0)], 5);
+    assert_eq!(last[(0, 1)], 6);
+}
+
+#[test]
+fn col_view_first_and_last() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let first = m.col(0);
+    assert_eq!(first[(0, 0)], 1);
+    assert_eq!(first[(1, 0)], 4);
+    let last = m.col(2);
+    assert_eq!(last[(0, 0)], 3);
+    assert_eq!(last[(1, 0)], 6);
+}
+
+#[test]
+#[should_panic(expected = "Row index")]
+fn row_view_out_of_bounds() {
+    let m = mat![[1, 2], [3, 4]];
+    m.row(2);
+}
+
+#[test]
+#[should_panic(expected = "Column index")]
+fn col_view_out_of_bounds() {
+    let m = mat![[1, 2], [3, 4]];
+    m.col(2);
+}
+
+#[test]
+fn row_mut_view() {
+    let mut m = mat![[1, 2, 3], [4, 5, 6]];
+    {
+        let mut r = m.row_mut(0);
+        r[(0, 0)] = 10;
+        r[(0, 1)] = 20;
+        r[(0, 2)] = 30;
+    }
+    assert_eq!(m[(0, 0)], 10);
+    assert_eq!(m[(0, 1)], 20);
+    assert_eq!(m[(0, 2)], 30);
+    assert_eq!(m[(1, 0)], 4);
+}
+
+#[test]
+fn col_mut_view() {
+    let mut m = mat![[1, 2], [3, 4], [5, 6]];
+    {
+        let mut c = m.col_mut(1);
+        c[(0, 0)] = 20;
+        c[(1, 0)] = 40;
+        c[(2, 0)] = 60;
+    }
+    assert_eq!(m[(0, 1)], 20);
+    assert_eq!(m[(1, 1)], 40);
+    assert_eq!(m[(2, 1)], 60);
+    assert_eq!(m[(0, 0)], 1);
+}
+
+// --- Diagonal Views ---
+
+#[test]
+fn diagonal_view_square() {
+    let m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    let d = m.diagonal();
+    assert_eq!(d.shape(), (3, 1));
+    assert_eq!(d[(0, 0)], 1);
+    assert_eq!(d[(1, 0)], 5);
+    assert_eq!(d[(2, 0)], 9);
+}
+
+#[test]
+fn diagonal_view_wide() {
+    let m = mat![[1, 2, 3, 4], [5, 6, 7, 8]];
+    let d = m.diagonal();
+    assert_eq!(d.shape(), (2, 1));
+    assert_eq!(d[(0, 0)], 1);
+    assert_eq!(d[(1, 0)], 6);
+}
+
+#[test]
+fn diagonal_view_tall() {
+    let m = mat![[1, 2], [3, 4], [5, 6]];
+    let d = m.diagonal();
+    assert_eq!(d.shape(), (2, 1));
+    assert_eq!(d[(0, 0)], 1);
+    assert_eq!(d[(1, 0)], 4);
+}
+
+#[test]
+fn diagonal_view_empty() {
+    let m: Mat<i32> = Mat::new();
+    let d = m.diagonal();
+    assert_eq!(d.shape(), (0, 1));
+}
+
+#[test]
+fn diagonal_mut_view() {
+    let mut m = mat![[1, 0, 0], [0, 2, 0], [0, 0, 3]];
+    {
+        let mut d = m.diagonal_mut();
+        d[(0, 0)] = 10;
+        d[(1, 0)] = 20;
+        d[(2, 0)] = 30;
+    }
+    assert_eq!(m[(0, 0)], 10);
+    assert_eq!(m[(1, 1)], 20);
+    assert_eq!(m[(2, 2)], 30);
+    assert_eq!(m[(0, 1)], 0);
+}
+
+// --- Submatrix Views ---
+
+#[test]
+fn submatrix_view() {
+    let m = mat![[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]];
+    let sub = m.submatrix(1, 1, 2, 2);
+    assert_eq!(sub.shape(), (2, 2));
+    assert_eq!(sub[(0, 0)], 6);
+    assert_eq!(sub[(0, 1)], 7);
+    assert_eq!(sub[(1, 0)], 10);
+    assert_eq!(sub[(1, 1)], 11);
+}
+
+#[test]
+fn submatrix_full() {
+    let m = mat![[1, 2], [3, 4]];
+    let sub = m.submatrix(0, 0, 2, 2);
+    assert_eq!(sub, m.as_ref());
+}
+
+#[test]
+fn submatrix_empty() {
+    let m = mat![[1, 2], [3, 4]];
+    let sub = m.submatrix(0, 0, 0, 0);
+    assert_eq!(sub.shape(), (0, 0));
+}
+
+#[test]
+#[should_panic(expected = "Row range")]
+fn submatrix_row_out_of_bounds() {
+    let m = mat![[1, 2], [3, 4]];
+    m.submatrix(1, 0, 2, 1);
+}
+
+#[test]
+#[should_panic(expected = "Column range")]
+fn submatrix_col_out_of_bounds() {
+    let m = mat![[1, 2], [3, 4]];
+    m.submatrix(0, 1, 1, 2);
+}
+
+#[test]
+fn submatrix_mut_view() {
+    let mut m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    {
+        let mut sub = m.submatrix_mut(0, 1, 2, 2);
+        sub[(0, 0)] = 20;
+        sub[(1, 1)] = 60;
+    }
+    assert_eq!(m[(0, 1)], 20);
+    assert_eq!(m[(1, 2)], 60);
+    assert_eq!(m[(0, 0)], 1);
+}
+
+// --- Rows/Cols Range ---
+
+#[test]
+fn rows_range_view() {
+    let m = mat![[1, 2], [3, 4], [5, 6], [7, 8]];
+    let sub = m.rows_range(1..3);
+    assert_eq!(sub.shape(), (2, 2));
+    assert_eq!(sub[(0, 0)], 3);
+    assert_eq!(sub[(0, 1)], 4);
+    assert_eq!(sub[(1, 0)], 5);
+    assert_eq!(sub[(1, 1)], 6);
+}
+
+#[test]
+fn cols_range_view() {
+    let m = mat![[1, 2, 3, 4], [5, 6, 7, 8]];
+    let sub = m.cols_range(1..3);
+    assert_eq!(sub.shape(), (2, 2));
+    assert_eq!(sub[(0, 0)], 2);
+    assert_eq!(sub[(0, 1)], 3);
+    assert_eq!(sub[(1, 0)], 6);
+    assert_eq!(sub[(1, 1)], 7);
+}
+
+#[test]
+fn rows_range_empty() {
+    let m = mat![[1, 2], [3, 4]];
+    let sub = m.rows_range(1..1);
+    assert_eq!(sub.shape(), (0, 2));
+}
+
+#[test]
+fn cols_range_empty() {
+    let m = mat![[1, 2], [3, 4]];
+    let sub = m.cols_range(0..0);
+    assert_eq!(sub.shape(), (2, 0));
+}
+
+#[test]
+fn rows_range_mut_view() {
+    let mut m = mat![[1, 2], [3, 4], [5, 6]];
+    {
+        let mut sub = m.rows_range_mut(1..3);
+        sub[(0, 0)] = 30;
+        sub[(1, 1)] = 60;
+    }
+    assert_eq!(m[(1, 0)], 30);
+    assert_eq!(m[(2, 1)], 60);
+}
+
+#[test]
+fn cols_range_mut_view() {
+    let mut m = mat![[1, 2, 3], [4, 5, 6]];
+    {
+        let mut sub = m.cols_range_mut(1..3);
+        sub[(0, 0)] = 20;
+        sub[(1, 1)] = 60;
+    }
+    assert_eq!(m[(0, 1)], 20);
+    assert_eq!(m[(1, 2)], 60);
+}
+
+// --- Split Views ---
+
+#[test]
+fn split_at_row() {
+    let m = mat![[1, 2], [3, 4], [5, 6]];
+    let (top, bottom) = m.split_at_row(1);
+    assert_eq!(top.shape(), (1, 2));
+    assert_eq!(top[(0, 0)], 1);
+    assert_eq!(top[(0, 1)], 2);
+    assert_eq!(bottom.shape(), (2, 2));
+    assert_eq!(bottom[(0, 0)], 3);
+    assert_eq!(bottom[(1, 1)], 6);
+}
+
+#[test]
+fn split_at_col() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let (left, right) = m.split_at_col(2);
+    assert_eq!(left.shape(), (2, 2));
+    assert_eq!(left[(0, 0)], 1);
+    assert_eq!(left[(1, 1)], 5);
+    assert_eq!(right.shape(), (2, 1));
+    assert_eq!(right[(0, 0)], 3);
+    assert_eq!(right[(1, 0)], 6);
+}
+
+#[test]
+fn split_at_row_edge_0() {
+    let m = mat![[1, 2], [3, 4]];
+    let (top, bottom) = m.split_at_row(0);
+    assert_eq!(top.shape(), (0, 2));
+    assert_eq!(bottom.shape(), (2, 2));
+    assert_eq!(bottom[(0, 0)], 1);
+}
+
+#[test]
+fn split_at_row_edge_nrows() {
+    let m = mat![[1, 2], [3, 4]];
+    let (top, bottom) = m.split_at_row(2);
+    assert_eq!(top.shape(), (2, 2));
+    assert_eq!(bottom.shape(), (0, 2));
+    assert_eq!(top[(1, 1)], 4);
+}
+
+#[test]
+fn split_at_col_edge_0() {
+    let m = mat![[1, 2], [3, 4]];
+    let (left, right) = m.split_at_col(0);
+    assert_eq!(left.shape(), (2, 0));
+    assert_eq!(right.shape(), (2, 2));
+}
+
+#[test]
+fn split_at_col_edge_ncols() {
+    let m = mat![[1, 2], [3, 4]];
+    let (left, right) = m.split_at_col(2);
+    assert_eq!(left.shape(), (2, 2));
+    assert_eq!(right.shape(), (2, 0));
+}
+
+#[test]
+#[should_panic(expected = "Split index")]
+fn split_at_row_out_of_bounds() {
+    let m = mat![[1, 2], [3, 4]];
+    m.split_at_row(3);
+}
+
+#[test]
+#[should_panic(expected = "Split index")]
+fn split_at_col_out_of_bounds() {
+    let m = mat![[1, 2], [3, 4]];
+    m.split_at_col(3);
+}
+
+#[test]
+fn split_at_row_mut_modifies_independently() {
+    let mut m = mat![[1, 2], [3, 4], [5, 6]];
+    {
+        let (mut top, mut bottom) = m.split_at_row_mut(1);
+        top[(0, 0)] = 10;
+        bottom[(0, 0)] = 30;
+        bottom[(1, 1)] = 60;
+    }
+    assert_eq!(m[(0, 0)], 10);
+    assert_eq!(m[(1, 0)], 30);
+    assert_eq!(m[(2, 1)], 60);
+}
+
+#[test]
+fn split_at_col_mut_modifies_independently() {
+    let mut m = mat![[1, 2, 3], [4, 5, 6]];
+    {
+        let (mut left, mut right) = m.split_at_col_mut(1);
+        left[(0, 0)] = 10;
+        right[(0, 0)] = 20;
+        right[(1, 1)] = 60;
+    }
+    assert_eq!(m[(0, 0)], 10);
+    assert_eq!(m[(0, 1)], 20);
+    assert_eq!(m[(1, 2)], 60);
+}
+
+// --- Transpose View ---
+
+#[test]
+fn transpose_view() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let t = m.transpose();
+    assert_eq!(t.shape(), (3, 2));
+    assert_eq!(t[(0, 0)], 1);
+    assert_eq!(t[(0, 1)], 4);
+    assert_eq!(t[(1, 0)], 2);
+    assert_eq!(t[(1, 1)], 5);
+    assert_eq!(t[(2, 0)], 3);
+    assert_eq!(t[(2, 1)], 6);
+}
+
+#[test]
+fn transpose_view_square() {
+    let m = mat![[1, 2], [3, 4]];
+    let t = m.transpose();
+    assert_eq!(t[(0, 0)], 1);
+    assert_eq!(t[(0, 1)], 3);
+    assert_eq!(t[(1, 0)], 2);
+    assert_eq!(t[(1, 1)], 4);
+}
+
+#[test]
+fn transpose_double_is_identity() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let tt = m.transpose().transpose();
+    assert_eq!(tt, m.as_ref());
+}
+
+#[test]
+fn transpose_empty() {
+    let m: Mat<i32> = Mat::new();
+    let t = m.transpose();
+    assert_eq!(t.shape(), (0, 0));
+}
+
+#[test]
+fn transpose_mut_view() {
+    let mut m = mat![[1, 2], [3, 4]];
+    {
+        let mut t = m.transpose_mut();
+        t[(0, 1)] = 30;
+    }
+    assert_eq!(m[(1, 0)], 30);
+}
+
+// --- Reverse Views ---
+
+#[test]
+fn reverse_rows_view() {
+    let m = mat![[1, 2], [3, 4], [5, 6]];
+    let r = m.reverse_rows();
+    assert_eq!(r.shape(), (3, 2));
+    assert_eq!(r[(0, 0)], 5);
+    assert_eq!(r[(0, 1)], 6);
+    assert_eq!(r[(1, 0)], 3);
+    assert_eq!(r[(1, 1)], 4);
+    assert_eq!(r[(2, 0)], 1);
+    assert_eq!(r[(2, 1)], 2);
+}
+
+#[test]
+fn reverse_cols_view() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let r = m.reverse_cols();
+    assert_eq!(r.shape(), (2, 3));
+    assert_eq!(r[(0, 0)], 3);
+    assert_eq!(r[(0, 1)], 2);
+    assert_eq!(r[(0, 2)], 1);
+    assert_eq!(r[(1, 0)], 6);
+    assert_eq!(r[(1, 1)], 5);
+    assert_eq!(r[(1, 2)], 4);
+}
+
+#[test]
+fn reverse_rows_double_is_identity() {
+    let m = mat![[1, 2], [3, 4], [5, 6]];
+    let rr = m.reverse_rows().reverse_rows();
+    assert_eq!(rr, m.as_ref());
+}
+
+#[test]
+fn reverse_cols_double_is_identity() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let rr = m.reverse_cols().reverse_cols();
+    assert_eq!(rr, m.as_ref());
+}
+
+#[test]
+fn reverse_rows_empty() {
+    let m: Mat<i32> = Mat::new();
+    let r = m.reverse_rows();
+    assert_eq!(r.shape(), (0, 0));
+}
+
+#[test]
+fn reverse_cols_empty() {
+    let m: Mat<i32> = Mat::new();
+    let r = m.reverse_cols();
+    assert_eq!(r.shape(), (0, 0));
+}
+
+#[test]
+fn reverse_rows_mut_view() {
+    let mut m = mat![[1, 2], [3, 4], [5, 6]];
+    {
+        let mut r = m.reverse_rows_mut();
+        r[(0, 0)] = 50;
+    }
+    assert_eq!(m[(2, 0)], 50);
+}
+
+#[test]
+fn reverse_cols_mut_view() {
+    let mut m = mat![[1, 2, 3], [4, 5, 6]];
+    {
+        let mut r = m.reverse_cols_mut();
+        r[(0, 0)] = 30;
+    }
+    assert_eq!(m[(0, 2)], 30);
+}
+
+// --- Transpose + Reverse Composition ---
+
+#[test]
+fn transpose_reverse_rows_is_reverse_cols_transpose() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let a = m.transpose().reverse_rows().to_owned();
+    let b = m.reverse_cols().transpose().to_owned();
+    assert_eq!(a, b);
+}
+
+// --- Extract: tril / triu ---
+
+#[test]
+fn tril_k0() {
+    let m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    let t = m.tril(0);
+    let expected = mat![[1, 0, 0], [4, 5, 0], [7, 8, 9]];
+    assert_eq!(t, expected);
+}
+
+#[test]
+fn tril_k1() {
+    let m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    let t = m.tril(1);
+    let expected = mat![[1, 2, 0], [4, 5, 6], [7, 8, 9]];
+    assert_eq!(t, expected);
+}
+
+#[test]
+fn tril_k_neg1() {
+    let m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    let t = m.tril(-1);
+    let expected = mat![[0, 0, 0], [4, 0, 0], [7, 8, 0]];
+    assert_eq!(t, expected);
+}
+
+#[test]
+fn triu_k0() {
+    let m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    let t = m.triu(0);
+    let expected = mat![[1, 2, 3], [0, 5, 6], [0, 0, 9]];
+    assert_eq!(t, expected);
+}
+
+#[test]
+fn triu_k1() {
+    let m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    let t = m.triu(1);
+    let expected = mat![[0, 2, 3], [0, 0, 6], [0, 0, 0]];
+    assert_eq!(t, expected);
+}
+
+#[test]
+fn triu_k_neg1() {
+    let m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    let t = m.triu(-1);
+    let expected = mat![[1, 2, 3], [4, 5, 6], [0, 8, 9]];
+    assert_eq!(t, expected);
+}
+
+#[test]
+fn tril_non_square() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let t = m.tril(0);
+    let expected = mat![[1, 0, 0], [4, 5, 0]];
+    assert_eq!(t, expected);
+}
+
+#[test]
+fn triu_non_square() {
+    let m = mat![[1, 2], [3, 4], [5, 6]];
+    let t = m.triu(0);
+    let expected = mat![[1, 2], [0, 4], [0, 0]];
+    assert_eq!(t, expected);
+}
+
+// --- Extract: take_rows / take_cols ---
+
+#[test]
+fn take_rows_subset() {
+    let m = mat![[1, 2], [3, 4], [5, 6], [7, 8]];
+    let t = m.take_rows(&[0, 2, 3]);
+    let expected = mat![[1, 2], [5, 6], [7, 8]];
+    assert_eq!(t, expected);
+}
+
+#[test]
+fn take_rows_reorder() {
+    let m = mat![[1, 2], [3, 4], [5, 6]];
+    let t = m.take_rows(&[2, 0, 1]);
+    let expected = mat![[5, 6], [1, 2], [3, 4]];
+    assert_eq!(t, expected);
+}
+
+#[test]
+fn take_rows_duplicate() {
+    let m = mat![[1, 2], [3, 4]];
+    let t = m.take_rows(&[0, 0, 1, 1]);
+    let expected = mat![[1, 2], [1, 2], [3, 4], [3, 4]];
+    assert_eq!(t, expected);
+}
+
+#[test]
+fn take_rows_empty() {
+    let m = mat![[1, 2], [3, 4]];
+    let t = m.take_rows(&[]);
+    assert_eq!(t.shape(), (0, 2));
+}
+
+#[test]
+#[should_panic(expected = "Row index")]
+fn take_rows_out_of_bounds() {
+    let m = mat![[1, 2], [3, 4]];
+    m.take_rows(&[0, 2]);
+}
+
+#[test]
+fn take_cols_subset() {
+    let m = mat![[1, 2, 3, 4], [5, 6, 7, 8]];
+    let t = m.take_cols(&[1, 3]);
+    let expected = mat![[2, 4], [6, 8]];
+    assert_eq!(t, expected);
+}
+
+#[test]
+fn take_cols_reorder() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let t = m.take_cols(&[2, 0, 1]);
+    let expected = mat![[3, 1, 2], [6, 4, 5]];
+    assert_eq!(t, expected);
+}
+
+#[test]
+fn take_cols_empty() {
+    let m = mat![[1, 2], [3, 4]];
+    let t = m.take_cols(&[]);
+    assert_eq!(t.shape(), (2, 0));
+}
+
+#[test]
+#[should_panic(expected = "Column index")]
+fn take_cols_out_of_bounds() {
+    let m = mat![[1, 2], [3, 4]];
+    m.take_cols(&[0, 2]);
+}
+
+// --- In-place: copy_from ---
+
+#[test]
+fn copy_from_full_matrix() {
+    let a = mat![[1, 2], [3, 4]];
+    let mut b = Mat::zeros(2, 2);
+    b.copy_from(a.as_ref());
+    assert_eq!(b, a);
+}
+
+#[test]
+fn copy_from_to_submatrix() {
+    let src = mat![[10, 20], [30, 40]];
+    let mut dst = Mat::zeros(4, 4);
+    dst.submatrix_mut(1, 1, 2, 2).copy_from(src.as_ref());
+    assert_eq!(dst[(0, 0)], 0);
+    assert_eq!(dst[(1, 1)], 10);
+    assert_eq!(dst[(1, 2)], 20);
+    assert_eq!(dst[(2, 1)], 30);
+    assert_eq!(dst[(2, 2)], 40);
+    assert_eq!(dst[(3, 3)], 0);
+}
+
+#[test]
+#[should_panic(expected = "Shape mismatch")]
+fn copy_from_shape_mismatch() {
+    let a = mat![[1, 2, 3]];
+    let mut b = Mat::zeros(2, 2);
+    b.copy_from(a.as_ref());
+}
+
+// --- In-place: fill ---
+
+#[test]
+fn fill_entire_matrix() {
+    let mut m = Mat::zeros(2, 3);
+    m.fill(7);
+    for i in 0..2 {
+        for j in 0..3 {
+            assert_eq!(m[(i, j)], 7);
+        }
+    }
+}
+
+#[test]
+fn fill_submatrix() {
+    let mut m = Mat::zeros(3, 3);
+    m.submatrix_mut(0, 0, 2, 2).fill(5);
+    assert_eq!(m[(0, 0)], 5);
+    assert_eq!(m[(0, 1)], 5);
+    assert_eq!(m[(1, 0)], 5);
+    assert_eq!(m[(1, 1)], 5);
+    assert_eq!(m[(2, 2)], 0);
+    assert_eq!(m[(0, 2)], 0);
+}
+
+// --- In-place: fill_with_fn ---
+
+#[test]
+fn fill_with_fn_whole_matrix() {
+    let mut m = Mat::zeros(2, 3);
+    m.fill_with_fn(|i, j| (i * 10 + j) as i32);
+    assert_eq!(m[(0, 0)], 0);
+    assert_eq!(m[(0, 2)], 2);
+    assert_eq!(m[(1, 0)], 10);
+    assert_eq!(m[(1, 2)], 12);
+}
+
+// --- In-place: swap_rows / swap_cols ---
+
+#[test]
+fn swap_rows_basic() {
+    let mut m = mat![[1, 2], [3, 4], [5, 6]];
+    m.swap_rows(0, 2);
+    assert_eq!(m[(0, 0)], 5);
+    assert_eq!(m[(0, 1)], 6);
+    assert_eq!(m[(2, 0)], 1);
+    assert_eq!(m[(2, 1)], 2);
+    assert_eq!(m[(1, 0)], 3);
+}
+
+#[test]
+fn swap_rows_same() {
+    let mut m = mat![[1, 2], [3, 4]];
+    m.swap_rows(0, 0);
+    assert_eq!(m[(0, 0)], 1);
+    assert_eq!(m[(1, 0)], 3);
+}
+
+#[test]
+#[should_panic(expected = "Row indices")]
+fn swap_rows_out_of_bounds() {
+    let mut m = mat![[1, 2], [3, 4]];
+    m.swap_rows(0, 2);
+}
+
+#[test]
+fn swap_cols_basic() {
+    let mut m = mat![[1, 2, 3], [4, 5, 6]];
+    m.swap_cols(0, 2);
+    assert_eq!(m[(0, 0)], 3);
+    assert_eq!(m[(1, 0)], 6);
+    assert_eq!(m[(0, 2)], 1);
+    assert_eq!(m[(1, 2)], 4);
+    assert_eq!(m[(0, 1)], 2);
+}
+
+#[test]
+fn swap_cols_same() {
+    let mut m = mat![[1, 2], [3, 4]];
+    m.swap_cols(0, 0);
+    assert_eq!(m[(0, 0)], 1);
+    assert_eq!(m[(0, 1)], 2);
+}
+
+#[test]
+#[should_panic(expected = "Column indices")]
+fn swap_cols_out_of_bounds() {
+    let mut m = mat![[1, 2], [3, 4]];
+    m.swap_cols(0, 2);
+}
+
+// --- Views on MatRef ---
+
+#[test]
+fn mat_ref_row_col_views() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let r = m.as_ref();
+    assert_eq!(r.row(0)[(0, 1)], 2);
+    assert_eq!(r.col(2)[(1, 0)], 6);
+}
+
+#[test]
+fn mat_ref_submatrix() {
+    let m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    let sub = m.as_ref().submatrix(0, 1, 2, 2);
+    assert_eq!(sub[(0, 0)], 2);
+    assert_eq!(sub[(1, 1)], 6);
+}
+
+#[test]
+fn mat_ref_transpose() {
+    let m = mat![[1, 2], [3, 4]];
+    let t = m.as_ref().transpose();
+    assert_eq!(t[(0, 1)], 3);
+    assert_eq!(t[(1, 0)], 2);
+}
+
+// --- Views on MatMut ---
+
+#[test]
+fn mat_mut_row_col_readonly() {
+    let mut m = mat![[1, 2, 3], [4, 5, 6]];
+    let v = m.as_mut();
+    assert_eq!(v.row(0)[(0, 1)], 2);
+    assert_eq!(v.col(2)[(1, 0)], 6);
+}
+
+#[test]
+fn mat_mut_submatrix_readonly() {
+    let mut m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    let v = m.as_mut();
+    let sub = v.submatrix(1, 0, 2, 2);
+    assert_eq!(sub[(0, 0)], 4);
+    assert_eq!(sub[(1, 1)], 8);
+}
+
+#[test]
+fn mat_mut_transpose_readonly() {
+    let mut m = mat![[1, 2], [3, 4]];
+    let v = m.as_mut();
+    let t = v.transpose();
+    assert_eq!(t[(1, 0)], 2);
+}
+
+#[test]
+fn mat_mut_tril() {
+    let mut m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    let v = m.as_mut();
+    let t = v.tril(0);
+    let expected = mat![[1, 0, 0], [4, 5, 0], [7, 8, 9]];
+    assert_eq!(t, expected);
+}
+
+#[test]
+fn mat_mut_take_rows() {
+    let mut m = mat![[1, 2], [3, 4], [5, 6]];
+    let v = m.as_mut();
+    let t = v.take_rows(&[2, 0]);
+    let expected = mat![[5, 6], [1, 2]];
+    assert_eq!(t, expected);
+}
+
+// --- Composed View Operations ---
+
+#[test]
+fn submatrix_of_transpose() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let sub = m.transpose().submatrix(1, 0, 2, 2);
+    assert_eq!(sub.shape(), (2, 2));
+    assert_eq!(sub[(0, 0)], 2);
+    assert_eq!(sub[(0, 1)], 5);
+    assert_eq!(sub[(1, 0)], 3);
+    assert_eq!(sub[(1, 1)], 6);
+}
+
+#[test]
+fn row_of_reversed_matrix() {
+    let m = mat![[1, 2], [3, 4], [5, 6]];
+    let r = m.reverse_rows().row(0);
+    assert_eq!(r[(0, 0)], 5);
+    assert_eq!(r[(0, 1)], 6);
+}
+
+#[test]
+fn diagonal_of_transpose() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let d = m.transpose().diagonal();
+    assert_eq!(d.shape(), (2, 1));
+    assert_eq!(d[(0, 0)], 1);
+    assert_eq!(d[(1, 0)], 5);
+}
+
+#[test]
+fn view_to_owned() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let sub = m.submatrix(0, 1, 2, 2);
+    let owned = sub.to_owned();
+    assert_eq!(owned, mat![[2, 3], [5, 6]]);
+}
+
+#[test]
+fn reversed_view_to_owned() {
+    let m = mat![[1, 2], [3, 4], [5, 6]];
+    let owned = m.reverse_rows().to_owned();
+    assert_eq!(owned, mat![[5, 6], [3, 4], [1, 2]]);
+}
+
+#[test]
+fn transposed_view_to_owned() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let owned = m.transpose().to_owned();
+    assert_eq!(owned, mat![[1, 4], [2, 5], [3, 6]]);
+}

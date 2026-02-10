@@ -1,10 +1,10 @@
 use std::fmt;
 use std::marker::PhantomData;
-use std::ops::{Index, IndexMut};
+use std::ops::{Index, IndexMut, Range};
 
 use super::{
-    ColIter, ColIterMut, DiagIter, MatEnumerate, MatMut, MatRef, RowIter, RowIterMut, fmt_matrix,
-    fmt_matrix_debug,
+    ColIter, ColIterMut, DiagIter, Mat, MatEnumerate, MatMut, MatRef, RowIter, RowIterMut,
+    fmt_matrix, fmt_matrix_debug,
 };
 
 impl<'a, T> MatMut<'a, T> {
@@ -170,6 +170,345 @@ impl<'a, T> MatMut<'a, T> {
     pub fn is_scalar(&self) -> bool {
         self.rb().is_scalar()
     }
+
+    #[inline]
+    pub fn row(&self, i: usize) -> MatRef<'_, T> {
+        self.rb().row(i)
+    }
+
+    #[inline]
+    pub fn col(&self, j: usize) -> MatRef<'_, T> {
+        self.rb().col(j)
+    }
+
+    #[inline]
+    pub fn diagonal(&self) -> MatRef<'_, T> {
+        self.rb().diagonal()
+    }
+
+    #[inline]
+    pub fn submatrix(
+        &self,
+        row_start: usize,
+        col_start: usize,
+        nrows: usize,
+        ncols: usize,
+    ) -> MatRef<'_, T> {
+        self.rb().submatrix(row_start, col_start, nrows, ncols)
+    }
+
+    #[inline]
+    pub fn rows_range(&self, range: Range<usize>) -> MatRef<'_, T> {
+        self.rb().rows_range(range)
+    }
+
+    #[inline]
+    pub fn cols_range(&self, range: Range<usize>) -> MatRef<'_, T> {
+        self.rb().cols_range(range)
+    }
+
+    #[inline]
+    pub fn split_at_row(&self, i: usize) -> (MatRef<'_, T>, MatRef<'_, T>) {
+        self.rb().split_at_row(i)
+    }
+
+    #[inline]
+    pub fn split_at_col(&self, j: usize) -> (MatRef<'_, T>, MatRef<'_, T>) {
+        self.rb().split_at_col(j)
+    }
+
+    #[inline]
+    pub fn transpose(&self) -> MatRef<'_, T> {
+        self.rb().transpose()
+    }
+
+    #[inline]
+    pub fn reverse_rows(&self) -> MatRef<'_, T> {
+        self.rb().reverse_rows()
+    }
+
+    #[inline]
+    pub fn reverse_cols(&self) -> MatRef<'_, T> {
+        self.rb().reverse_cols()
+    }
+
+    #[inline]
+    pub fn row_mut(self, i: usize) -> MatMut<'a, T> {
+        assert!(
+            i < self.nrows,
+            "Row index {} out of bounds for {} rows",
+            i,
+            self.nrows
+        );
+        MatMut {
+            ptr: unsafe { self.ptr.offset(i as isize * self.row_stride) },
+            nrows: 1,
+            ncols: self.ncols,
+            row_stride: self.row_stride,
+            col_stride: self.col_stride,
+            _marker: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub fn col_mut(self, j: usize) -> MatMut<'a, T> {
+        assert!(
+            j < self.ncols,
+            "Column index {} out of bounds for {} columns",
+            j,
+            self.ncols
+        );
+        MatMut {
+            ptr: unsafe { self.ptr.offset(j as isize * self.col_stride) },
+            nrows: self.nrows,
+            ncols: 1,
+            row_stride: self.row_stride,
+            col_stride: self.col_stride,
+            _marker: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub fn diagonal_mut(self) -> MatMut<'a, T> {
+        let len = self.nrows.min(self.ncols);
+        MatMut {
+            ptr: self.ptr,
+            nrows: len,
+            ncols: 1,
+            row_stride: self.row_stride + self.col_stride,
+            col_stride: self.row_stride + self.col_stride,
+            _marker: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub fn submatrix_mut(
+        self,
+        row_start: usize,
+        col_start: usize,
+        nrows: usize,
+        ncols: usize,
+    ) -> MatMut<'a, T> {
+        assert!(
+            row_start + nrows <= self.nrows,
+            "Row range {}..{} out of bounds for {} rows",
+            row_start,
+            row_start + nrows,
+            self.nrows
+        );
+        assert!(
+            col_start + ncols <= self.ncols,
+            "Column range {}..{} out of bounds for {} columns",
+            col_start,
+            col_start + ncols,
+            self.ncols
+        );
+        MatMut {
+            ptr: unsafe {
+                self.ptr.offset(
+                    row_start as isize * self.row_stride + col_start as isize * self.col_stride,
+                )
+            },
+            nrows,
+            ncols,
+            row_stride: self.row_stride,
+            col_stride: self.col_stride,
+            _marker: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub fn rows_range_mut(self, range: Range<usize>) -> MatMut<'a, T> {
+        assert!(
+            range.start <= range.end,
+            "Invalid range: start {} > end {}",
+            range.start,
+            range.end
+        );
+        let ncols = self.ncols;
+        self.submatrix_mut(range.start, 0, range.end - range.start, ncols)
+    }
+
+    #[inline]
+    pub fn cols_range_mut(self, range: Range<usize>) -> MatMut<'a, T> {
+        assert!(
+            range.start <= range.end,
+            "Invalid range: start {} > end {}",
+            range.start,
+            range.end
+        );
+        let nrows = self.nrows;
+        self.submatrix_mut(0, range.start, nrows, range.end - range.start)
+    }
+
+    pub fn split_at_row_mut(self, i: usize) -> (MatMut<'a, T>, MatMut<'a, T>) {
+        assert!(
+            i <= self.nrows,
+            "Split index {} out of bounds for {} rows",
+            i,
+            self.nrows
+        );
+        let top = MatMut {
+            ptr: self.ptr,
+            nrows: i,
+            ncols: self.ncols,
+            row_stride: self.row_stride,
+            col_stride: self.col_stride,
+            _marker: PhantomData,
+        };
+        let bottom = MatMut {
+            ptr: unsafe { self.ptr.offset(i as isize * self.row_stride) },
+            nrows: self.nrows - i,
+            ncols: self.ncols,
+            row_stride: self.row_stride,
+            col_stride: self.col_stride,
+            _marker: PhantomData,
+        };
+        (top, bottom)
+    }
+
+    pub fn split_at_col_mut(self, j: usize) -> (MatMut<'a, T>, MatMut<'a, T>) {
+        assert!(
+            j <= self.ncols,
+            "Split index {} out of bounds for {} columns",
+            j,
+            self.ncols
+        );
+        let left = MatMut {
+            ptr: self.ptr,
+            nrows: self.nrows,
+            ncols: j,
+            row_stride: self.row_stride,
+            col_stride: self.col_stride,
+            _marker: PhantomData,
+        };
+        let right = MatMut {
+            ptr: unsafe { self.ptr.offset(j as isize * self.col_stride) },
+            nrows: self.nrows,
+            ncols: self.ncols - j,
+            row_stride: self.row_stride,
+            col_stride: self.col_stride,
+            _marker: PhantomData,
+        };
+        (left, right)
+    }
+
+    #[inline]
+    pub fn transpose_mut(self) -> MatMut<'a, T> {
+        MatMut {
+            ptr: self.ptr,
+            nrows: self.ncols,
+            ncols: self.nrows,
+            row_stride: self.col_stride,
+            col_stride: self.row_stride,
+            _marker: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub fn reverse_rows_mut(self) -> MatMut<'a, T> {
+        if self.nrows == 0 {
+            return self;
+        }
+        MatMut {
+            ptr: unsafe { self.ptr.offset((self.nrows - 1) as isize * self.row_stride) },
+            nrows: self.nrows,
+            ncols: self.ncols,
+            row_stride: -self.row_stride,
+            col_stride: self.col_stride,
+            _marker: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub fn reverse_cols_mut(self) -> MatMut<'a, T> {
+        if self.ncols == 0 {
+            return self;
+        }
+        MatMut {
+            ptr: unsafe { self.ptr.offset((self.ncols - 1) as isize * self.col_stride) },
+            nrows: self.nrows,
+            ncols: self.ncols,
+            row_stride: self.row_stride,
+            col_stride: -self.col_stride,
+            _marker: PhantomData,
+        }
+    }
+
+    pub fn copy_from(&mut self, src: MatRef<'_, T>)
+    where
+        T: Clone,
+    {
+        assert_eq!(
+            (self.nrows, self.ncols),
+            (src.nrows(), src.ncols()),
+            "Shape mismatch: destination is {}x{} but source is {}x{}",
+            self.nrows,
+            self.ncols,
+            src.nrows(),
+            src.ncols()
+        );
+        for j in 0..self.ncols {
+            for i in 0..self.nrows {
+                *self.at_mut(i, j) = src.at(i, j).clone();
+            }
+        }
+    }
+
+    pub fn fill(&mut self, value: T)
+    where
+        T: Clone,
+    {
+        for j in 0..self.ncols {
+            for i in 0..self.nrows {
+                *self.at_mut(i, j) = value.clone();
+            }
+        }
+    }
+
+    pub fn fill_with_fn<F: FnMut(usize, usize) -> T>(&mut self, mut f: F) {
+        for j in 0..self.ncols {
+            for i in 0..self.nrows {
+                *self.at_mut(i, j) = f(i, j);
+            }
+        }
+    }
+
+    pub fn swap_rows(&mut self, i1: usize, i2: usize) {
+        assert!(
+            i1 < self.nrows && i2 < self.nrows,
+            "Row indices ({}, {}) out of bounds for {} rows",
+            i1,
+            i2,
+            self.nrows
+        );
+        if i1 == i2 {
+            return;
+        }
+        for j in 0..self.ncols {
+            unsafe {
+                std::ptr::swap(self.ptr_at_mut(i1, j), self.ptr_at_mut(i2, j));
+            }
+        }
+    }
+
+    pub fn swap_cols(&mut self, j1: usize, j2: usize) {
+        assert!(
+            j1 < self.ncols && j2 < self.ncols,
+            "Column indices ({}, {}) out of bounds for {} columns",
+            j1,
+            j2,
+            self.ncols
+        );
+        if j1 == j2 {
+            return;
+        }
+        for i in 0..self.nrows {
+            unsafe {
+                std::ptr::swap(self.ptr_at_mut(i, j1), self.ptr_at_mut(i, j2));
+            }
+        }
+    }
 }
 
 impl<T: PartialEq> MatMut<'_, T> {
@@ -200,6 +539,26 @@ impl<T: PartialEq + num_traits::Zero + num_traits::One> MatMut<'_, T> {
     #[inline]
     pub fn is_identity(&self) -> bool {
         self.rb().is_identity()
+    }
+}
+
+impl<T: Clone + num_traits::Zero> MatMut<'_, T> {
+    pub fn tril(&self, k: isize) -> Mat<T> {
+        self.rb().tril(k)
+    }
+
+    pub fn triu(&self, k: isize) -> Mat<T> {
+        self.rb().triu(k)
+    }
+}
+
+impl<T: Clone> MatMut<'_, T> {
+    pub fn take_rows(&self, indices: &[usize]) -> Mat<T> {
+        self.rb().take_rows(indices)
+    }
+
+    pub fn take_cols(&self, indices: &[usize]) -> Mat<T> {
+        self.rb().take_cols(indices)
     }
 }
 

@@ -1,6 +1,6 @@
 use std::fmt;
 use std::marker::PhantomData;
-use std::ops::{Index, IndexMut};
+use std::ops::{Index, IndexMut, Range};
 
 use num_traits::{One, Zero};
 
@@ -306,6 +306,24 @@ impl<T: Clone> Mat<T> {
     }
 }
 
+impl<T: Clone> Mat<T> {
+    pub fn copy_from(&mut self, src: MatRef<'_, T>) {
+        self.as_mut().copy_from(src)
+    }
+
+    pub fn fill(&mut self, value: T) {
+        self.as_mut().fill(value)
+    }
+
+    pub fn take_rows(&self, indices: &[usize]) -> Mat<T> {
+        self.as_ref().take_rows(indices)
+    }
+
+    pub fn take_cols(&self, indices: &[usize]) -> Mat<T> {
+        self.as_ref().take_cols(indices)
+    }
+}
+
 impl<T: Clone + Zero> Mat<T> {
     pub fn zeros(nrows: usize, ncols: usize) -> Self {
         Mat {
@@ -314,6 +332,14 @@ impl<T: Clone + Zero> Mat<T> {
             ncols,
             col_stride: nrows,
         }
+    }
+
+    pub fn tril(&self, k: isize) -> Mat<T> {
+        self.as_ref().tril(k)
+    }
+
+    pub fn triu(&self, k: isize) -> Mat<T> {
+        self.as_ref().triu(k)
     }
 }
 
@@ -409,6 +435,139 @@ impl<T> Mat<T> {
     #[inline]
     pub fn is_scalar(&self) -> bool {
         self.as_ref().is_scalar()
+    }
+
+    #[inline]
+    pub fn row(&self, i: usize) -> MatRef<'_, T> {
+        self.as_ref().row(i)
+    }
+
+    #[inline]
+    pub fn col(&self, j: usize) -> MatRef<'_, T> {
+        self.as_ref().col(j)
+    }
+
+    #[inline]
+    pub fn diagonal(&self) -> MatRef<'_, T> {
+        self.as_ref().diagonal()
+    }
+
+    #[inline]
+    pub fn submatrix(
+        &self,
+        row_start: usize,
+        col_start: usize,
+        nrows: usize,
+        ncols: usize,
+    ) -> MatRef<'_, T> {
+        self.as_ref().submatrix(row_start, col_start, nrows, ncols)
+    }
+
+    #[inline]
+    pub fn rows_range(&self, range: Range<usize>) -> MatRef<'_, T> {
+        self.as_ref().rows_range(range)
+    }
+
+    #[inline]
+    pub fn cols_range(&self, range: Range<usize>) -> MatRef<'_, T> {
+        self.as_ref().cols_range(range)
+    }
+
+    #[inline]
+    pub fn split_at_row(&self, i: usize) -> (MatRef<'_, T>, MatRef<'_, T>) {
+        self.as_ref().split_at_row(i)
+    }
+
+    #[inline]
+    pub fn split_at_col(&self, j: usize) -> (MatRef<'_, T>, MatRef<'_, T>) {
+        self.as_ref().split_at_col(j)
+    }
+
+    #[inline]
+    pub fn transpose(&self) -> MatRef<'_, T> {
+        self.as_ref().transpose()
+    }
+
+    #[inline]
+    pub fn reverse_rows(&self) -> MatRef<'_, T> {
+        self.as_ref().reverse_rows()
+    }
+
+    #[inline]
+    pub fn reverse_cols(&self) -> MatRef<'_, T> {
+        self.as_ref().reverse_cols()
+    }
+
+    #[inline]
+    pub fn row_mut(&mut self, i: usize) -> MatMut<'_, T> {
+        self.as_mut().row_mut(i)
+    }
+
+    #[inline]
+    pub fn col_mut(&mut self, j: usize) -> MatMut<'_, T> {
+        self.as_mut().col_mut(j)
+    }
+
+    #[inline]
+    pub fn diagonal_mut(&mut self) -> MatMut<'_, T> {
+        self.as_mut().diagonal_mut()
+    }
+
+    #[inline]
+    pub fn submatrix_mut(
+        &mut self,
+        row_start: usize,
+        col_start: usize,
+        nrows: usize,
+        ncols: usize,
+    ) -> MatMut<'_, T> {
+        self.as_mut()
+            .submatrix_mut(row_start, col_start, nrows, ncols)
+    }
+
+    #[inline]
+    pub fn rows_range_mut(&mut self, range: Range<usize>) -> MatMut<'_, T> {
+        self.as_mut().rows_range_mut(range)
+    }
+
+    #[inline]
+    pub fn cols_range_mut(&mut self, range: Range<usize>) -> MatMut<'_, T> {
+        self.as_mut().cols_range_mut(range)
+    }
+
+    pub fn split_at_row_mut(&mut self, i: usize) -> (MatMut<'_, T>, MatMut<'_, T>) {
+        self.as_mut().split_at_row_mut(i)
+    }
+
+    pub fn split_at_col_mut(&mut self, j: usize) -> (MatMut<'_, T>, MatMut<'_, T>) {
+        self.as_mut().split_at_col_mut(j)
+    }
+
+    #[inline]
+    pub fn transpose_mut(&mut self) -> MatMut<'_, T> {
+        self.as_mut().transpose_mut()
+    }
+
+    #[inline]
+    pub fn reverse_rows_mut(&mut self) -> MatMut<'_, T> {
+        self.as_mut().reverse_rows_mut()
+    }
+
+    #[inline]
+    pub fn reverse_cols_mut(&mut self) -> MatMut<'_, T> {
+        self.as_mut().reverse_cols_mut()
+    }
+
+    pub fn fill_with_fn<F: FnMut(usize, usize) -> T>(&mut self, f: F) {
+        self.as_mut().fill_with_fn(f)
+    }
+
+    pub fn swap_rows(&mut self, i1: usize, i2: usize) {
+        self.as_mut().swap_rows(i1, i2)
+    }
+
+    pub fn swap_cols(&mut self, j1: usize, j2: usize) {
+        self.as_mut().swap_cols(j1, j2)
     }
 }
 

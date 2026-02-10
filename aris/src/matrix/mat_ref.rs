@@ -1,6 +1,6 @@
 use std::fmt;
 use std::marker::PhantomData;
-use std::ops::Index;
+use std::ops::{Index, Range};
 
 use num_traits::{One, Zero};
 
@@ -127,6 +127,179 @@ impl<'a, T> MatRef<'a, T> {
     pub fn is_scalar(self) -> bool {
         self.nrows == 1 && self.ncols == 1
     }
+
+    #[inline]
+    pub fn row(self, i: usize) -> MatRef<'a, T> {
+        assert!(
+            i < self.nrows,
+            "Row index {} out of bounds for {} rows",
+            i,
+            self.nrows
+        );
+        MatRef {
+            ptr: self.ptr_at(i, 0),
+            nrows: 1,
+            ncols: self.ncols,
+            row_stride: self.row_stride,
+            col_stride: self.col_stride,
+            _marker: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub fn col(self, j: usize) -> MatRef<'a, T> {
+        assert!(
+            j < self.ncols,
+            "Column index {} out of bounds for {} columns",
+            j,
+            self.ncols
+        );
+        MatRef {
+            ptr: self.ptr_at(0, j),
+            nrows: self.nrows,
+            ncols: 1,
+            row_stride: self.row_stride,
+            col_stride: self.col_stride,
+            _marker: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub fn diagonal(self) -> MatRef<'a, T> {
+        let len = self.nrows.min(self.ncols);
+        MatRef {
+            ptr: self.ptr,
+            nrows: len,
+            ncols: 1,
+            row_stride: self.row_stride + self.col_stride,
+            col_stride: self.row_stride + self.col_stride,
+            _marker: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub fn submatrix(
+        self,
+        row_start: usize,
+        col_start: usize,
+        nrows: usize,
+        ncols: usize,
+    ) -> MatRef<'a, T> {
+        assert!(
+            row_start + nrows <= self.nrows,
+            "Row range {}..{} out of bounds for {} rows",
+            row_start,
+            row_start + nrows,
+            self.nrows
+        );
+        assert!(
+            col_start + ncols <= self.ncols,
+            "Column range {}..{} out of bounds for {} columns",
+            col_start,
+            col_start + ncols,
+            self.ncols
+        );
+        MatRef {
+            ptr: self.ptr_at(row_start, col_start),
+            nrows,
+            ncols,
+            row_stride: self.row_stride,
+            col_stride: self.col_stride,
+            _marker: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub fn rows_range(self, range: Range<usize>) -> MatRef<'a, T> {
+        assert!(
+            range.start <= range.end,
+            "Invalid range: start {} > end {}",
+            range.start,
+            range.end
+        );
+        self.submatrix(range.start, 0, range.end - range.start, self.ncols)
+    }
+
+    #[inline]
+    pub fn cols_range(self, range: Range<usize>) -> MatRef<'a, T> {
+        assert!(
+            range.start <= range.end,
+            "Invalid range: start {} > end {}",
+            range.start,
+            range.end
+        );
+        self.submatrix(0, range.start, self.nrows, range.end - range.start)
+    }
+
+    #[inline]
+    pub fn split_at_row(self, i: usize) -> (MatRef<'a, T>, MatRef<'a, T>) {
+        assert!(
+            i <= self.nrows,
+            "Split index {} out of bounds for {} rows",
+            i,
+            self.nrows
+        );
+        (
+            self.submatrix(0, 0, i, self.ncols),
+            self.submatrix(i, 0, self.nrows - i, self.ncols),
+        )
+    }
+
+    #[inline]
+    pub fn split_at_col(self, j: usize) -> (MatRef<'a, T>, MatRef<'a, T>) {
+        assert!(
+            j <= self.ncols,
+            "Split index {} out of bounds for {} columns",
+            j,
+            self.ncols
+        );
+        (
+            self.submatrix(0, 0, self.nrows, j),
+            self.submatrix(0, j, self.nrows, self.ncols - j),
+        )
+    }
+
+    #[inline]
+    pub fn transpose(self) -> MatRef<'a, T> {
+        MatRef {
+            ptr: self.ptr,
+            nrows: self.ncols,
+            ncols: self.nrows,
+            row_stride: self.col_stride,
+            col_stride: self.row_stride,
+            _marker: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub fn reverse_rows(self) -> MatRef<'a, T> {
+        if self.nrows == 0 {
+            return self;
+        }
+        MatRef {
+            ptr: self.ptr_at(self.nrows - 1, 0),
+            nrows: self.nrows,
+            ncols: self.ncols,
+            row_stride: -self.row_stride,
+            col_stride: self.col_stride,
+            _marker: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub fn reverse_cols(self) -> MatRef<'a, T> {
+        if self.ncols == 0 {
+            return self;
+        }
+        MatRef {
+            ptr: self.ptr_at(0, self.ncols - 1),
+            nrows: self.nrows,
+            ncols: self.ncols,
+            row_stride: self.row_stride,
+            col_stride: -self.col_stride,
+            _marker: PhantomData,
+        }
+    }
 }
 
 impl<T: PartialEq> PartialEq for MatRef<'_, T> {
@@ -216,6 +389,68 @@ impl<T: PartialEq + Zero + One> MatRef<'_, T> {
             }
         }
         true
+    }
+}
+
+impl<'a, T: Clone + Zero> MatRef<'a, T> {
+    pub fn tril(self, k: isize) -> Mat<T> {
+        Mat::from_fn(self.nrows, self.ncols, |i, j| {
+            if (j as isize) - (i as isize) <= k {
+                self.at(i, j).clone()
+            } else {
+                T::zero()
+            }
+        })
+    }
+
+    pub fn triu(self, k: isize) -> Mat<T> {
+        Mat::from_fn(self.nrows, self.ncols, |i, j| {
+            if (j as isize) - (i as isize) >= k {
+                self.at(i, j).clone()
+            } else {
+                T::zero()
+            }
+        })
+    }
+}
+
+impl<'a, T: Clone> MatRef<'a, T> {
+    pub fn take_rows(self, indices: &[usize]) -> Mat<T> {
+        for &i in indices {
+            assert!(
+                i < self.nrows,
+                "Row index {} out of bounds for {} rows",
+                i,
+                self.nrows
+            );
+        }
+        let nrows = indices.len();
+        let mut data = Vec::with_capacity(nrows * self.ncols);
+        for j in 0..self.ncols {
+            for &i in indices {
+                data.push(self.at(i, j).clone());
+            }
+        }
+        Mat::from_vec_col(nrows, self.ncols, data)
+    }
+
+    pub fn take_cols(self, indices: &[usize]) -> Mat<T> {
+        for &j in indices {
+            assert!(
+                j < self.ncols,
+                "Column index {} out of bounds for {} columns",
+                j,
+                self.ncols
+            );
+        }
+        let ncols = indices.len();
+        let mut data = Vec::with_capacity(self.nrows * ncols);
+        for &j in indices {
+            for i in 0..self.nrows {
+                data.push(self.at(i, j).clone());
+            }
+        }
+        Mat::from_vec_col(self.nrows, ncols, data)
     }
 }
 
