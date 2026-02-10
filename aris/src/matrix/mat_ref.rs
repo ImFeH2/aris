@@ -300,6 +300,35 @@ impl<'a, T> MatRef<'a, T> {
             _marker: PhantomData,
         }
     }
+
+    pub fn map<U, F: FnMut(&T) -> U>(self, mut f: F) -> Mat<U> {
+        let (nrows, ncols) = self.shape();
+        let mut data = Vec::with_capacity(self.size());
+        for j in 0..ncols {
+            for i in 0..nrows {
+                data.push(f(self.at(i, j)));
+            }
+        }
+        Mat::from_vec_col(nrows, ncols, data)
+    }
+
+    pub fn zip_map<U, F: FnMut(&T, &T) -> U>(self, other: MatRef<'_, T>, mut f: F) -> Mat<U> {
+        assert_eq!(
+            self.shape(),
+            other.shape(),
+            "shape mismatch: {:?} vs {:?}",
+            self.shape(),
+            other.shape()
+        );
+        let (nrows, ncols) = self.shape();
+        let mut data = Vec::with_capacity(self.size());
+        for j in 0..ncols {
+            for i in 0..nrows {
+                data.push(f(self.at(i, j), other.at(i, j)));
+            }
+        }
+        Mat::from_vec_col(nrows, ncols, data)
+    }
 }
 
 impl<T: PartialEq> PartialEq for MatRef<'_, T> {
@@ -598,6 +627,135 @@ impl<'a, T: Clone> MatRef<'a, T> {
     pub fn append_col(self, col: &[T]) -> Mat<T> {
         let ncols = self.ncols;
         self.insert_col(ncols, col)
+    }
+
+    pub fn component_mul(self, other: MatRef<'_, T>) -> Mat<T>
+    where
+        T: std::ops::Mul<Output = T>,
+    {
+        self.zip_map(other, |a, b| a.clone() * b.clone())
+    }
+
+    pub fn component_div(self, other: MatRef<'_, T>) -> Mat<T>
+    where
+        T: std::ops::Div<Output = T>,
+    {
+        self.zip_map(other, |a, b| a.clone() / b.clone())
+    }
+
+    pub fn clamp(self, min: T, max: T) -> Mat<T>
+    where
+        T: PartialOrd,
+    {
+        self.map(|x| {
+            if *x < min {
+                min.clone()
+            } else if *x > max {
+                max.clone()
+            } else {
+                x.clone()
+            }
+        })
+    }
+}
+
+impl<'a, T: num_traits::Signed + Clone> MatRef<'a, T> {
+    pub fn abs(self) -> Mat<T> {
+        self.map(|x| x.abs())
+    }
+
+    pub fn signum(self) -> Mat<T> {
+        self.map(|x| x.signum())
+    }
+}
+
+impl<'a, T: num_traits::Float> MatRef<'a, T> {
+    pub fn pow(self, n: T) -> Mat<T> {
+        self.map(|x| x.powf(n))
+    }
+
+    pub fn sqrt(self) -> Mat<T> {
+        self.map(|x| x.sqrt())
+    }
+
+    pub fn cbrt(self) -> Mat<T> {
+        self.map(|x| x.cbrt())
+    }
+
+    pub fn exp(self) -> Mat<T> {
+        self.map(|x| x.exp())
+    }
+
+    pub fn ln(self) -> Mat<T> {
+        self.map(|x| x.ln())
+    }
+
+    pub fn log10(self) -> Mat<T> {
+        self.map(|x| x.log10())
+    }
+
+    pub fn log2(self) -> Mat<T> {
+        self.map(|x| x.log2())
+    }
+
+    pub fn sin(self) -> Mat<T> {
+        self.map(|x| x.sin())
+    }
+
+    pub fn cos(self) -> Mat<T> {
+        self.map(|x| x.cos())
+    }
+
+    pub fn tan(self) -> Mat<T> {
+        self.map(|x| x.tan())
+    }
+
+    pub fn asin(self) -> Mat<T> {
+        self.map(|x| x.asin())
+    }
+
+    pub fn acos(self) -> Mat<T> {
+        self.map(|x| x.acos())
+    }
+
+    pub fn atan(self) -> Mat<T> {
+        self.map(|x| x.atan())
+    }
+
+    pub fn sinh(self) -> Mat<T> {
+        self.map(|x| x.sinh())
+    }
+
+    pub fn cosh(self) -> Mat<T> {
+        self.map(|x| x.cosh())
+    }
+
+    pub fn tanh(self) -> Mat<T> {
+        self.map(|x| x.tanh())
+    }
+
+    pub fn asinh(self) -> Mat<T> {
+        self.map(|x| x.asinh())
+    }
+
+    pub fn acosh(self) -> Mat<T> {
+        self.map(|x| x.acosh())
+    }
+
+    pub fn atanh(self) -> Mat<T> {
+        self.map(|x| x.atanh())
+    }
+
+    pub fn ceil(self) -> Mat<T> {
+        self.map(|x| x.ceil())
+    }
+
+    pub fn floor(self) -> Mat<T> {
+        self.map(|x| x.floor())
+    }
+
+    pub fn round(self) -> Mat<T> {
+        self.map(|x| x.round())
     }
 }
 

@@ -367,6 +367,27 @@ impl<T: Clone> Mat<T> {
         self.as_ref().append_col(col)
     }
 
+    pub fn component_mul(&self, other: MatRef<'_, T>) -> Mat<T>
+    where
+        T: std::ops::Mul<Output = T>,
+    {
+        self.as_ref().component_mul(other)
+    }
+
+    pub fn component_div(&self, other: MatRef<'_, T>) -> Mat<T>
+    where
+        T: std::ops::Div<Output = T>,
+    {
+        self.as_ref().component_div(other)
+    }
+
+    pub fn clamp(&self, min: T, max: T) -> Mat<T>
+    where
+        T: PartialOrd,
+    {
+        self.as_ref().clamp(min, max)
+    }
+
     pub fn vstack(matrices: &[MatRef<'_, T>]) -> Mat<T> {
         if matrices.is_empty() {
             return Mat::new();
@@ -711,6 +732,114 @@ impl<T> Mat<T> {
 
     pub fn swap_cols(&mut self, j1: usize, j2: usize) {
         self.as_mut().swap_cols(j1, j2)
+    }
+
+    pub fn map<U, F: FnMut(&T) -> U>(&self, f: F) -> Mat<U> {
+        self.as_ref().map(f)
+    }
+
+    pub fn zip_map<U, F: FnMut(&T, &T) -> U>(&self, other: MatRef<'_, T>, f: F) -> Mat<U> {
+        self.as_ref().zip_map(other, f)
+    }
+}
+
+impl<T: num_traits::Signed + Clone> Mat<T> {
+    pub fn abs(&self) -> Mat<T> {
+        self.as_ref().abs()
+    }
+
+    pub fn signum(&self) -> Mat<T> {
+        self.as_ref().signum()
+    }
+}
+
+impl<T: num_traits::Float> Mat<T> {
+    pub fn pow(&self, n: T) -> Mat<T> {
+        self.as_ref().pow(n)
+    }
+
+    pub fn sqrt(&self) -> Mat<T> {
+        self.as_ref().sqrt()
+    }
+
+    pub fn cbrt(&self) -> Mat<T> {
+        self.as_ref().cbrt()
+    }
+
+    pub fn exp(&self) -> Mat<T> {
+        self.as_ref().exp()
+    }
+
+    pub fn ln(&self) -> Mat<T> {
+        self.as_ref().ln()
+    }
+
+    pub fn log10(&self) -> Mat<T> {
+        self.as_ref().log10()
+    }
+
+    pub fn log2(&self) -> Mat<T> {
+        self.as_ref().log2()
+    }
+
+    pub fn sin(&self) -> Mat<T> {
+        self.as_ref().sin()
+    }
+
+    pub fn cos(&self) -> Mat<T> {
+        self.as_ref().cos()
+    }
+
+    pub fn tan(&self) -> Mat<T> {
+        self.as_ref().tan()
+    }
+
+    pub fn asin(&self) -> Mat<T> {
+        self.as_ref().asin()
+    }
+
+    pub fn acos(&self) -> Mat<T> {
+        self.as_ref().acos()
+    }
+
+    pub fn atan(&self) -> Mat<T> {
+        self.as_ref().atan()
+    }
+
+    pub fn sinh(&self) -> Mat<T> {
+        self.as_ref().sinh()
+    }
+
+    pub fn cosh(&self) -> Mat<T> {
+        self.as_ref().cosh()
+    }
+
+    pub fn tanh(&self) -> Mat<T> {
+        self.as_ref().tanh()
+    }
+
+    pub fn asinh(&self) -> Mat<T> {
+        self.as_ref().asinh()
+    }
+
+    pub fn acosh(&self) -> Mat<T> {
+        self.as_ref().acosh()
+    }
+
+    pub fn atanh(&self) -> Mat<T> {
+        self.as_ref().atanh()
+    }
+
+    pub fn ceil(&self) -> Mat<T> {
+        self.as_ref().ceil()
+    }
+
+    pub fn floor(&self) -> Mat<T> {
+        self.as_ref().floor()
+    }
+
+    pub fn round(&self) -> Mat<T> {
+        self.as_ref().round()
     }
 }
 

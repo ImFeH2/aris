@@ -604,6 +604,137 @@ impl<T: Clone> MatMut<'_, T> {
     pub fn append_col(&self, col: &[T]) -> Mat<T> {
         self.rb().append_col(col)
     }
+
+    pub fn component_mul(&self, other: MatRef<'_, T>) -> Mat<T>
+    where
+        T: std::ops::Mul<Output = T>,
+    {
+        self.rb().component_mul(other)
+    }
+
+    pub fn component_div(&self, other: MatRef<'_, T>) -> Mat<T>
+    where
+        T: std::ops::Div<Output = T>,
+    {
+        self.rb().component_div(other)
+    }
+
+    pub fn clamp(&self, min: T, max: T) -> Mat<T>
+    where
+        T: PartialOrd,
+    {
+        self.rb().clamp(min, max)
+    }
+}
+
+impl<T: num_traits::Signed + Clone> MatMut<'_, T> {
+    pub fn abs(&self) -> Mat<T> {
+        self.rb().abs()
+    }
+
+    pub fn signum(&self) -> Mat<T> {
+        self.rb().signum()
+    }
+}
+
+impl<T: num_traits::Float> MatMut<'_, T> {
+    pub fn pow(&self, n: T) -> Mat<T> {
+        self.rb().pow(n)
+    }
+
+    pub fn sqrt(&self) -> Mat<T> {
+        self.rb().sqrt()
+    }
+
+    pub fn cbrt(&self) -> Mat<T> {
+        self.rb().cbrt()
+    }
+
+    pub fn exp(&self) -> Mat<T> {
+        self.rb().exp()
+    }
+
+    pub fn ln(&self) -> Mat<T> {
+        self.rb().ln()
+    }
+
+    pub fn log10(&self) -> Mat<T> {
+        self.rb().log10()
+    }
+
+    pub fn log2(&self) -> Mat<T> {
+        self.rb().log2()
+    }
+
+    pub fn sin(&self) -> Mat<T> {
+        self.rb().sin()
+    }
+
+    pub fn cos(&self) -> Mat<T> {
+        self.rb().cos()
+    }
+
+    pub fn tan(&self) -> Mat<T> {
+        self.rb().tan()
+    }
+
+    pub fn asin(&self) -> Mat<T> {
+        self.rb().asin()
+    }
+
+    pub fn acos(&self) -> Mat<T> {
+        self.rb().acos()
+    }
+
+    pub fn atan(&self) -> Mat<T> {
+        self.rb().atan()
+    }
+
+    pub fn sinh(&self) -> Mat<T> {
+        self.rb().sinh()
+    }
+
+    pub fn cosh(&self) -> Mat<T> {
+        self.rb().cosh()
+    }
+
+    pub fn tanh(&self) -> Mat<T> {
+        self.rb().tanh()
+    }
+
+    pub fn asinh(&self) -> Mat<T> {
+        self.rb().asinh()
+    }
+
+    pub fn acosh(&self) -> Mat<T> {
+        self.rb().acosh()
+    }
+
+    pub fn atanh(&self) -> Mat<T> {
+        self.rb().atanh()
+    }
+
+    pub fn ceil(&self) -> Mat<T> {
+        self.rb().ceil()
+    }
+
+    pub fn floor(&self) -> Mat<T> {
+        self.rb().floor()
+    }
+
+    pub fn round(&self) -> Mat<T> {
+        self.rb().round()
+    }
+}
+
+impl<'a, T> MatMut<'a, T> {
+    pub fn map<U, F: FnMut(&T) -> U>(&self, f: F) -> Mat<U> {
+        self.rb().map(f)
+    }
+
+    pub fn zip_map<U, F: FnMut(&T, &T) -> U>(&self, other: MatRef<'_, T>, f: F) -> Mat<U> {
+        self.rb().zip_map(other, f)
+    }
 }
 
 impl<T> Index<(usize, usize)> for MatMut<'_, T> {
