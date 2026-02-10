@@ -1,6 +1,7 @@
 mod mat;
 mod mat_mut;
 mod mat_ref;
+mod ops;
 
 #[cfg(test)]
 mod test;
