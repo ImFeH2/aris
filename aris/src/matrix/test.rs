@@ -291,9 +291,10 @@ fn as_ref_creates_view() {
 #[test]
 fn as_mut_creates_mutable_view() {
     let mut m = Mat::from_rows(&[&[1, 2], &[3, 4]]);
-    let mut v = m.as_mut();
-    v[(0, 1)] = 20;
-    drop(v);
+    {
+        let mut v = m.as_mut();
+        v[(0, 1)] = 20;
+    }
     assert_eq!(m[(0, 1)], 20);
 }
 
@@ -308,11 +309,12 @@ fn mat_ref_get() {
 #[test]
 fn mat_mut_get_and_get_mut() {
     let mut m = Mat::from_rows(&[&[1, 2], &[3, 4]]);
-    let mut v = m.as_mut();
-    assert_eq!(v.get(1, 0), Some(&3));
-    assert_eq!(v.get(2, 0), None);
-    *v.get_mut(1, 1).unwrap() = 44;
-    drop(v);
+    {
+        let mut v = m.as_mut();
+        assert_eq!(v.get(1, 0), Some(&3));
+        assert_eq!(v.get(2, 0), None);
+        *v.get_mut(1, 1).unwrap() = 44;
+    }
     assert_eq!(m[(1, 1)], 44);
 }
 
@@ -328,11 +330,13 @@ fn mat_mut_rb_creates_ref_view() {
 #[test]
 fn mat_mut_rb_mut_creates_reborrow() {
     let mut m = Mat::from_rows(&[&[1, 2], &[3, 4]]);
-    let mut v = m.as_mut();
-    let mut rb = v.rb_mut();
-    rb[(0, 0)] = 10;
-    drop(rb);
-    drop(v);
+    {
+        let mut v = m.as_mut();
+        {
+            let mut rb = v.rb_mut();
+            rb[(0, 0)] = 10;
+        }
+    }
     assert_eq!(m[(0, 0)], 10);
 }
 
