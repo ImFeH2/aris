@@ -385,6 +385,62 @@ impl<T> Mat<T> {
     pub fn row_iter_mut(&mut self) -> RowIterMut<'_, T> {
         self.as_mut().row_iter_mut()
     }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.as_ref().is_empty()
+    }
+
+    #[inline]
+    pub fn is_square(&self) -> bool {
+        self.as_ref().is_square()
+    }
+
+    #[inline]
+    pub fn is_row_vector(&self) -> bool {
+        self.as_ref().is_row_vector()
+    }
+
+    #[inline]
+    pub fn is_col_vector(&self) -> bool {
+        self.as_ref().is_col_vector()
+    }
+
+    #[inline]
+    pub fn is_scalar(&self) -> bool {
+        self.as_ref().is_scalar()
+    }
+}
+
+impl<T: PartialEq> Mat<T> {
+    #[inline]
+    pub fn is_symmetric(&self) -> bool {
+        self.as_ref().is_symmetric()
+    }
+}
+
+impl<T: Zero> Mat<T> {
+    #[inline]
+    pub fn is_diagonal(&self) -> bool {
+        self.as_ref().is_diagonal()
+    }
+
+    #[inline]
+    pub fn is_upper_triangular(&self) -> bool {
+        self.as_ref().is_upper_triangular()
+    }
+
+    #[inline]
+    pub fn is_lower_triangular(&self) -> bool {
+        self.as_ref().is_lower_triangular()
+    }
+}
+
+impl<T: PartialEq + Zero + One> Mat<T> {
+    #[inline]
+    pub fn is_identity(&self) -> bool {
+        self.as_ref().is_identity()
+    }
 }
 
 impl<T> Default for Mat<T> {

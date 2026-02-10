@@ -145,6 +145,62 @@ impl<'a, T> MatMut<'a, T> {
             _marker: PhantomData,
         }
     }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.rb().is_empty()
+    }
+
+    #[inline]
+    pub fn is_square(&self) -> bool {
+        self.rb().is_square()
+    }
+
+    #[inline]
+    pub fn is_row_vector(&self) -> bool {
+        self.rb().is_row_vector()
+    }
+
+    #[inline]
+    pub fn is_col_vector(&self) -> bool {
+        self.rb().is_col_vector()
+    }
+
+    #[inline]
+    pub fn is_scalar(&self) -> bool {
+        self.rb().is_scalar()
+    }
+}
+
+impl<T: PartialEq> MatMut<'_, T> {
+    #[inline]
+    pub fn is_symmetric(&self) -> bool {
+        self.rb().is_symmetric()
+    }
+}
+
+impl<T: num_traits::Zero> MatMut<'_, T> {
+    #[inline]
+    pub fn is_diagonal(&self) -> bool {
+        self.rb().is_diagonal()
+    }
+
+    #[inline]
+    pub fn is_upper_triangular(&self) -> bool {
+        self.rb().is_upper_triangular()
+    }
+
+    #[inline]
+    pub fn is_lower_triangular(&self) -> bool {
+        self.rb().is_lower_triangular()
+    }
+}
+
+impl<T: PartialEq + num_traits::Zero + num_traits::One> MatMut<'_, T> {
+    #[inline]
+    pub fn is_identity(&self) -> bool {
+        self.rb().is_identity()
+    }
 }
 
 impl<T> Index<(usize, usize)> for MatMut<'_, T> {

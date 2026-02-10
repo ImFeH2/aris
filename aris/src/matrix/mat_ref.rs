@@ -2,6 +2,8 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::ops::Index;
 
+use num_traits::{One, Zero};
+
 use super::{ColIter, DiagIter, Mat, MatEnumerate, MatRef, RowIter, fmt_matrix, fmt_matrix_debug};
 
 impl<'a, T> MatRef<'a, T> {
@@ -100,6 +102,31 @@ impl<'a, T> MatRef<'a, T> {
             length: self.nrows * self.ncols,
         }
     }
+
+    #[inline]
+    pub fn is_empty(self) -> bool {
+        self.nrows == 0 || self.ncols == 0
+    }
+
+    #[inline]
+    pub fn is_square(self) -> bool {
+        self.nrows == self.ncols
+    }
+
+    #[inline]
+    pub fn is_row_vector(self) -> bool {
+        self.nrows == 1
+    }
+
+    #[inline]
+    pub fn is_col_vector(self) -> bool {
+        self.ncols == 1
+    }
+
+    #[inline]
+    pub fn is_scalar(self) -> bool {
+        self.nrows == 1 && self.ncols == 1
+    }
 }
 
 impl<T: PartialEq> PartialEq for MatRef<'_, T> {
@@ -119,6 +146,78 @@ impl<T: PartialEq> PartialEq for MatRef<'_, T> {
 }
 
 impl<T: Eq> Eq for MatRef<'_, T> {}
+
+impl<T: PartialEq> MatRef<'_, T> {
+    pub fn is_symmetric(self) -> bool {
+        if self.nrows != self.ncols {
+            return false;
+        }
+        for j in 1..self.ncols {
+            for i in 0..j {
+                if self.at(i, j) != self.at(j, i) {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+}
+
+impl<T: Zero> MatRef<'_, T> {
+    pub fn is_diagonal(self) -> bool {
+        for j in 0..self.ncols {
+            for i in 0..self.nrows {
+                if i != j && !self.at(i, j).is_zero() {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+
+    pub fn is_upper_triangular(self) -> bool {
+        for j in 0..self.ncols {
+            for i in (j + 1)..self.nrows {
+                if !self.at(i, j).is_zero() {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+
+    pub fn is_lower_triangular(self) -> bool {
+        for j in 0..self.ncols {
+            for i in 0..j.min(self.nrows) {
+                if !self.at(i, j).is_zero() {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+}
+
+impl<T: PartialEq + Zero + One> MatRef<'_, T> {
+    pub fn is_identity(self) -> bool {
+        if self.nrows != self.ncols {
+            return false;
+        }
+        let one = T::one();
+        for j in 0..self.ncols {
+            for i in 0..self.nrows {
+                if i == j {
+                    if *self.at(i, j) != one {
+                        return false;
+                    }
+                } else if !self.at(i, j).is_zero() {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+}
 
 impl<T> Index<(usize, usize)> for MatRef<'_, T> {
     type Output = T;
