@@ -452,6 +452,153 @@ impl<'a, T: Clone> MatRef<'a, T> {
         }
         Mat::from_vec_col(self.nrows, ncols, data)
     }
+
+    pub fn reshape(self, nrows: usize, ncols: usize) -> Mat<T> {
+        assert_eq!(
+            self.nrows * self.ncols,
+            nrows * ncols,
+            "Cannot reshape {}x{} ({} elements) to {}x{} ({} elements)",
+            self.nrows,
+            self.ncols,
+            self.nrows * self.ncols,
+            nrows,
+            ncols,
+            nrows * ncols
+        );
+        let mut data = Vec::with_capacity(nrows * ncols);
+        for j in 0..self.ncols {
+            for i in 0..self.nrows {
+                data.push(self.at(i, j).clone());
+            }
+        }
+        Mat::from_vec_col(nrows, ncols, data)
+    }
+
+    pub fn flatten(self) -> Mat<T> {
+        let size = self.nrows * self.ncols;
+        self.reshape(size, 1)
+    }
+
+    pub fn flatten_row(self) -> Mat<T> {
+        let size = self.nrows * self.ncols;
+        self.reshape(1, size)
+    }
+
+    pub fn to_col_vector(self) -> Mat<T> {
+        self.flatten()
+    }
+
+    pub fn to_row_vector(self) -> Mat<T> {
+        self.flatten_row()
+    }
+
+    pub fn insert_row(self, i: usize, row: &[T]) -> Mat<T> {
+        assert!(
+            i <= self.nrows,
+            "Row insert index {} out of bounds for {} rows",
+            i,
+            self.nrows
+        );
+        assert_eq!(
+            row.len(),
+            self.ncols,
+            "Row length {} does not match {} columns",
+            row.len(),
+            self.ncols
+        );
+        let new_nrows = self.nrows + 1;
+        let mut data = Vec::with_capacity(new_nrows * self.ncols);
+        for (j, val) in row.iter().enumerate() {
+            for r in 0..i {
+                data.push(self.at(r, j).clone());
+            }
+            data.push(val.clone());
+            for r in i..self.nrows {
+                data.push(self.at(r, j).clone());
+            }
+        }
+        Mat::from_vec_col(new_nrows, self.ncols, data)
+    }
+
+    pub fn insert_col(self, j: usize, col: &[T]) -> Mat<T> {
+        assert!(
+            j <= self.ncols,
+            "Column insert index {} out of bounds for {} columns",
+            j,
+            self.ncols
+        );
+        assert_eq!(
+            col.len(),
+            self.nrows,
+            "Column length {} does not match {} rows",
+            col.len(),
+            self.nrows
+        );
+        let new_ncols = self.ncols + 1;
+        let mut data = Vec::with_capacity(self.nrows * new_ncols);
+        for c in 0..j {
+            for r in 0..self.nrows {
+                data.push(self.at(r, c).clone());
+            }
+        }
+        for val in col.iter().take(self.nrows) {
+            data.push(val.clone());
+        }
+        for c in j..self.ncols {
+            for r in 0..self.nrows {
+                data.push(self.at(r, c).clone());
+            }
+        }
+        Mat::from_vec_col(self.nrows, new_ncols, data)
+    }
+
+    pub fn remove_row(self, i: usize) -> Mat<T> {
+        assert!(
+            i < self.nrows,
+            "Row index {} out of bounds for {} rows",
+            i,
+            self.nrows
+        );
+        let new_nrows = self.nrows - 1;
+        let mut data = Vec::with_capacity(new_nrows * self.ncols);
+        for j in 0..self.ncols {
+            for r in 0..self.nrows {
+                if r != i {
+                    data.push(self.at(r, j).clone());
+                }
+            }
+        }
+        Mat::from_vec_col(new_nrows, self.ncols, data)
+    }
+
+    pub fn remove_col(self, j: usize) -> Mat<T> {
+        assert!(
+            j < self.ncols,
+            "Column index {} out of bounds for {} columns",
+            j,
+            self.ncols
+        );
+        let new_ncols = self.ncols - 1;
+        let mut data = Vec::with_capacity(self.nrows * new_ncols);
+        for c in 0..self.ncols {
+            if c != j {
+                for r in 0..self.nrows {
+                    data.push(self.at(r, c).clone());
+                }
+            }
+        }
+        Mat::from_vec_col(self.nrows, new_ncols, data)
+    }
+
+    pub fn append_row(self, row: &[T]) -> Mat<T> {
+        let nrows = self.nrows;
+        self.insert_row(nrows, row)
+    }
+
+    pub fn append_col(self, col: &[T]) -> Mat<T> {
+        let ncols = self.ncols;
+        self.insert_col(ncols, col)
+    }
 }
 
 impl<T> Index<(usize, usize)> for MatRef<'_, T> {

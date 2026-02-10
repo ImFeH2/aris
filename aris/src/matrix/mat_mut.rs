@@ -560,6 +560,50 @@ impl<T: Clone> MatMut<'_, T> {
     pub fn take_cols(&self, indices: &[usize]) -> Mat<T> {
         self.rb().take_cols(indices)
     }
+
+    pub fn reshape(&self, nrows: usize, ncols: usize) -> Mat<T> {
+        self.rb().reshape(nrows, ncols)
+    }
+
+    pub fn flatten(&self) -> Mat<T> {
+        self.rb().flatten()
+    }
+
+    pub fn flatten_row(&self) -> Mat<T> {
+        self.rb().flatten_row()
+    }
+
+    pub fn to_col_vector(&self) -> Mat<T> {
+        self.rb().to_col_vector()
+    }
+
+    pub fn to_row_vector(&self) -> Mat<T> {
+        self.rb().to_row_vector()
+    }
+
+    pub fn insert_row(&self, i: usize, row: &[T]) -> Mat<T> {
+        self.rb().insert_row(i, row)
+    }
+
+    pub fn insert_col(&self, j: usize, col: &[T]) -> Mat<T> {
+        self.rb().insert_col(j, col)
+    }
+
+    pub fn remove_row(&self, i: usize) -> Mat<T> {
+        self.rb().remove_row(i)
+    }
+
+    pub fn remove_col(&self, j: usize) -> Mat<T> {
+        self.rb().remove_col(j)
+    }
+
+    pub fn append_row(&self, row: &[T]) -> Mat<T> {
+        self.rb().append_row(row)
+    }
+
+    pub fn append_col(&self, col: &[T]) -> Mat<T> {
+        self.rb().append_col(col)
+    }
 }
 
 impl<T> Index<(usize, usize)> for MatMut<'_, T> {

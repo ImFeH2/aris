@@ -2072,3 +2072,470 @@ fn transposed_view_to_owned() {
     let owned = m.transpose().to_owned();
     assert_eq!(owned, mat![[1, 4], [2, 5], [3, 6]]);
 }
+
+// --- reshape ---
+
+#[test]
+fn reshape_2x3_to_3x2() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let r = m.reshape(3, 2);
+    assert_eq!(r.shape(), (3, 2));
+    assert_eq!(r[(0, 0)], 1);
+    assert_eq!(r[(1, 0)], 4);
+    assert_eq!(r[(2, 0)], 2);
+    assert_eq!(r[(0, 1)], 5);
+    assert_eq!(r[(1, 1)], 3);
+    assert_eq!(r[(2, 1)], 6);
+}
+
+#[test]
+fn reshape_2x3_to_6x1() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let r = m.reshape(6, 1);
+    assert_eq!(r.shape(), (6, 1));
+    assert_eq!(r[(0, 0)], 1);
+    assert_eq!(r[(1, 0)], 4);
+    assert_eq!(r[(2, 0)], 2);
+    assert_eq!(r[(3, 0)], 5);
+    assert_eq!(r[(4, 0)], 3);
+    assert_eq!(r[(5, 0)], 6);
+}
+
+#[test]
+fn reshape_2x3_to_1x6() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let r = m.reshape(1, 6);
+    assert_eq!(r.shape(), (1, 6));
+    assert_eq!(r[(0, 0)], 1);
+    assert_eq!(r[(0, 1)], 4);
+    assert_eq!(r[(0, 2)], 2);
+    assert_eq!(r[(0, 3)], 5);
+    assert_eq!(r[(0, 4)], 3);
+    assert_eq!(r[(0, 5)], 6);
+}
+
+#[test]
+fn reshape_same_shape() {
+    let m = mat![[1, 2], [3, 4]];
+    let r = m.reshape(2, 2);
+    assert_eq!(r, m);
+}
+
+#[test]
+#[should_panic(expected = "Cannot reshape")]
+fn reshape_mismatched_size() {
+    let m = mat![[1, 2], [3, 4]];
+    m.reshape(3, 3);
+}
+
+// --- flatten / flatten_row ---
+
+#[test]
+fn flatten_2x3() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let f = m.flatten();
+    assert_eq!(f.shape(), (6, 1));
+    assert_eq!(f[(0, 0)], 1);
+    assert_eq!(f[(1, 0)], 4);
+    assert_eq!(f[(2, 0)], 2);
+    assert_eq!(f[(3, 0)], 5);
+}
+
+#[test]
+fn flatten_row_2x3() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let f = m.flatten_row();
+    assert_eq!(f.shape(), (1, 6));
+    assert_eq!(f[(0, 0)], 1);
+    assert_eq!(f[(0, 1)], 4);
+}
+
+#[test]
+fn flatten_1x1() {
+    let m = mat![[42]];
+    let f = m.flatten();
+    assert_eq!(f.shape(), (1, 1));
+    assert_eq!(f[(0, 0)], 42);
+}
+
+#[test]
+fn to_col_vector_equals_flatten() {
+    let m = mat![[1, 2], [3, 4]];
+    assert_eq!(m.to_col_vector(), m.flatten());
+}
+
+#[test]
+fn to_row_vector_equals_flatten_row() {
+    let m = mat![[1, 2], [3, 4]];
+    assert_eq!(m.to_row_vector(), m.flatten_row());
+}
+
+// --- vstack / hstack ---
+
+#[test]
+fn vstack_basic() {
+    let a = mat![[1, 2], [3, 4]];
+    let b = mat![[5, 6]];
+    let m = Mat::vstack(&[a.as_ref(), b.as_ref()]);
+    let expected = mat![[1, 2], [3, 4], [5, 6]];
+    assert_eq!(m, expected);
+}
+
+#[test]
+fn vstack_three_matrices() {
+    let a = mat![[1, 2]];
+    let b = mat![[3, 4]];
+    let c = mat![[5, 6]];
+    let m = Mat::vstack(&[a.as_ref(), b.as_ref(), c.as_ref()]);
+    let expected = mat![[1, 2], [3, 4], [5, 6]];
+    assert_eq!(m, expected);
+}
+
+#[test]
+fn vstack_single() {
+    let a = mat![[1, 2], [3, 4]];
+    let m = Mat::vstack(&[a.as_ref()]);
+    assert_eq!(m, a);
+}
+
+#[test]
+fn vstack_empty() {
+    let m: Mat<i32> = Mat::vstack(&[]);
+    assert_eq!(m.shape(), (0, 0));
+}
+
+#[test]
+#[should_panic(expected = "columns")]
+fn vstack_mismatched_cols() {
+    let a = mat![[1, 2]];
+    let b = mat![[3, 4, 5]];
+    Mat::vstack(&[a.as_ref(), b.as_ref()]);
+}
+
+#[test]
+fn hstack_basic() {
+    let a = mat![[1, 2], [3, 4]];
+    let b = mat![[5], [6]];
+    let m = Mat::hstack(&[a.as_ref(), b.as_ref()]);
+    let expected = mat![[1, 2, 5], [3, 4, 6]];
+    assert_eq!(m, expected);
+}
+
+#[test]
+fn hstack_three_matrices() {
+    let a = mat![[1], [4]];
+    let b = mat![[2], [5]];
+    let c = mat![[3], [6]];
+    let m = Mat::hstack(&[a.as_ref(), b.as_ref(), c.as_ref()]);
+    let expected = mat![[1, 2, 3], [4, 5, 6]];
+    assert_eq!(m, expected);
+}
+
+#[test]
+fn hstack_single() {
+    let a = mat![[1, 2], [3, 4]];
+    let m = Mat::hstack(&[a.as_ref()]);
+    assert_eq!(m, a);
+}
+
+#[test]
+fn hstack_empty() {
+    let m: Mat<i32> = Mat::hstack(&[]);
+    assert_eq!(m.shape(), (0, 0));
+}
+
+#[test]
+#[should_panic(expected = "rows")]
+fn hstack_mismatched_rows() {
+    let a = mat![[1, 2], [3, 4]];
+    let b = mat![[5, 6]];
+    Mat::hstack(&[a.as_ref(), b.as_ref()]);
+}
+
+// --- resize ---
+
+#[test]
+fn resize_larger() {
+    let mut m = mat![[1, 2], [3, 4]];
+    m.resize(3, 4, 0);
+    assert_eq!(m.shape(), (3, 4));
+    assert_eq!(m[(0, 0)], 1);
+    assert_eq!(m[(1, 1)], 4);
+    assert_eq!(m[(2, 0)], 0);
+    assert_eq!(m[(0, 2)], 0);
+    assert_eq!(m[(2, 3)], 0);
+}
+
+#[test]
+fn resize_smaller() {
+    let mut m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    m.resize(2, 2, 0);
+    assert_eq!(m.shape(), (2, 2));
+    assert_eq!(m[(0, 0)], 1);
+    assert_eq!(m[(0, 1)], 2);
+    assert_eq!(m[(1, 0)], 4);
+    assert_eq!(m[(1, 1)], 5);
+}
+
+#[test]
+fn resize_same() {
+    let mut m = mat![[1, 2], [3, 4]];
+    m.resize(2, 2, 0);
+    assert_eq!(m, mat![[1, 2], [3, 4]]);
+}
+
+#[test]
+fn resize_add_rows_only() {
+    let mut m = mat![[1, 2], [3, 4]];
+    m.resize(4, 2, 0);
+    assert_eq!(m.shape(), (4, 2));
+    assert_eq!(m[(0, 0)], 1);
+    assert_eq!(m[(1, 1)], 4);
+    assert_eq!(m[(2, 0)], 0);
+    assert_eq!(m[(3, 1)], 0);
+}
+
+#[test]
+fn resize_add_cols_only() {
+    let mut m = mat![[1, 2], [3, 4]];
+    m.resize(2, 4, 9);
+    assert_eq!(m.shape(), (2, 4));
+    assert_eq!(m[(0, 0)], 1);
+    assert_eq!(m[(1, 1)], 4);
+    assert_eq!(m[(0, 2)], 9);
+    assert_eq!(m[(1, 3)], 9);
+}
+
+// --- reserve ---
+
+#[test]
+fn reserve_increases_capacity() {
+    let mut m: Mat<i32> = Mat::zeros(2, 3);
+    let before = m.as_slice().len();
+    m.reserve(10);
+    assert_eq!(m.as_slice().len(), before);
+    assert_eq!(m.shape(), (2, 3));
+}
+
+// --- truncate ---
+
+#[test]
+fn truncate_rows_and_cols() {
+    let mut m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    m.truncate(2, 2);
+    assert_eq!(m.shape(), (2, 2));
+    assert_eq!(m[(0, 0)], 1);
+    assert_eq!(m[(0, 1)], 2);
+    assert_eq!(m[(1, 0)], 4);
+    assert_eq!(m[(1, 1)], 5);
+}
+
+#[test]
+fn truncate_same_size() {
+    let mut m = mat![[1, 2], [3, 4]];
+    m.truncate(2, 2);
+    assert_eq!(m, mat![[1, 2], [3, 4]]);
+}
+
+#[test]
+#[should_panic(expected = "Cannot truncate")]
+fn truncate_larger_panics() {
+    let mut m = mat![[1, 2], [3, 4]];
+    m.truncate(3, 2);
+}
+
+// --- insert_row ---
+
+#[test]
+fn insert_row_beginning() {
+    let m = mat![[1, 2], [3, 4]];
+    let r = m.insert_row(0, &[5, 6]);
+    assert_eq!(r, mat![[5, 6], [1, 2], [3, 4]]);
+}
+
+#[test]
+fn insert_row_middle() {
+    let m = mat![[1, 2], [3, 4]];
+    let r = m.insert_row(1, &[5, 6]);
+    assert_eq!(r, mat![[1, 2], [5, 6], [3, 4]]);
+}
+
+#[test]
+fn insert_row_end() {
+    let m = mat![[1, 2], [3, 4]];
+    let r = m.insert_row(2, &[5, 6]);
+    assert_eq!(r, mat![[1, 2], [3, 4], [5, 6]]);
+}
+
+#[test]
+#[should_panic(expected = "Row insert index")]
+fn insert_row_out_of_bounds() {
+    let m = mat![[1, 2], [3, 4]];
+    m.insert_row(3, &[5, 6]);
+}
+
+#[test]
+#[should_panic(expected = "Row length")]
+fn insert_row_wrong_length() {
+    let m = mat![[1, 2], [3, 4]];
+    m.insert_row(0, &[5, 6, 7]);
+}
+
+// --- insert_col ---
+
+#[test]
+fn insert_col_beginning() {
+    let m = mat![[1, 2], [3, 4]];
+    let r = m.insert_col(0, &[5, 6]);
+    assert_eq!(r, mat![[5, 1, 2], [6, 3, 4]]);
+}
+
+#[test]
+fn insert_col_middle() {
+    let m = mat![[1, 2], [3, 4]];
+    let r = m.insert_col(1, &[5, 6]);
+    assert_eq!(r, mat![[1, 5, 2], [3, 6, 4]]);
+}
+
+#[test]
+fn insert_col_end() {
+    let m = mat![[1, 2], [3, 4]];
+    let r = m.insert_col(2, &[5, 6]);
+    assert_eq!(r, mat![[1, 2, 5], [3, 4, 6]]);
+}
+
+#[test]
+#[should_panic(expected = "Column insert index")]
+fn insert_col_out_of_bounds() {
+    let m = mat![[1, 2], [3, 4]];
+    m.insert_col(3, &[5, 6]);
+}
+
+#[test]
+#[should_panic(expected = "Column length")]
+fn insert_col_wrong_length() {
+    let m = mat![[1, 2], [3, 4]];
+    m.insert_col(0, &[5]);
+}
+
+// --- remove_row ---
+
+#[test]
+fn remove_row_first() {
+    let m = mat![[1, 2], [3, 4], [5, 6]];
+    assert_eq!(m.remove_row(0), mat![[3, 4], [5, 6]]);
+}
+
+#[test]
+fn remove_row_middle() {
+    let m = mat![[1, 2], [3, 4], [5, 6]];
+    assert_eq!(m.remove_row(1), mat![[1, 2], [5, 6]]);
+}
+
+#[test]
+fn remove_row_last() {
+    let m = mat![[1, 2], [3, 4], [5, 6]];
+    assert_eq!(m.remove_row(2), mat![[1, 2], [3, 4]]);
+}
+
+#[test]
+#[should_panic(expected = "Row index")]
+fn remove_row_out_of_bounds() {
+    let m = mat![[1, 2], [3, 4]];
+    m.remove_row(2);
+}
+
+// --- remove_col ---
+
+#[test]
+fn remove_col_first() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    assert_eq!(m.remove_col(0), mat![[2, 3], [5, 6]]);
+}
+
+#[test]
+fn remove_col_middle() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    assert_eq!(m.remove_col(1), mat![[1, 3], [4, 6]]);
+}
+
+#[test]
+fn remove_col_last() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    assert_eq!(m.remove_col(2), mat![[1, 2], [4, 5]]);
+}
+
+#[test]
+#[should_panic(expected = "Column index")]
+fn remove_col_out_of_bounds() {
+    let m = mat![[1, 2], [3, 4]];
+    m.remove_col(2);
+}
+
+// --- append_row / append_col ---
+
+#[test]
+fn append_row_basic() {
+    let m = mat![[1, 2], [3, 4]];
+    let r = m.append_row(&[5, 6]);
+    assert_eq!(r, mat![[1, 2], [3, 4], [5, 6]]);
+}
+
+#[test]
+fn append_col_basic() {
+    let m = mat![[1, 2], [3, 4]];
+    let r = m.append_col(&[5, 6]);
+    assert_eq!(r, mat![[1, 2, 5], [3, 4, 6]]);
+}
+
+// --- Shape ops on MatRef ---
+
+#[test]
+fn mat_ref_reshape() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let r = m.as_ref().reshape(3, 2);
+    assert_eq!(r.shape(), (3, 2));
+    assert_eq!(r[(0, 0)], 1);
+    assert_eq!(r[(1, 0)], 4);
+}
+
+#[test]
+fn mat_ref_insert_row() {
+    let m = mat![[1, 2], [3, 4]];
+    let r = m.as_ref().insert_row(1, &[5, 6]);
+    assert_eq!(r, mat![[1, 2], [5, 6], [3, 4]]);
+}
+
+// --- Shape ops on MatMut ---
+
+#[test]
+fn mat_mut_reshape() {
+    let mut m = mat![[1, 2, 3], [4, 5, 6]];
+    let v = m.as_mut();
+    let r = v.reshape(3, 2);
+    assert_eq!(r.shape(), (3, 2));
+}
+
+#[test]
+fn mat_mut_flatten() {
+    let mut m = mat![[1, 2], [3, 4]];
+    let v = m.as_mut();
+    let f = v.flatten();
+    assert_eq!(f.shape(), (4, 1));
+}
+
+// --- Reshape on transposed views ---
+
+#[test]
+fn reshape_transposed_view() {
+    let m = mat![[1, 2, 3], [4, 5, 6]];
+    let t = m.transpose();
+    let r = t.reshape(2, 3);
+    assert_eq!(r.shape(), (2, 3));
+    assert_eq!(r[(0, 0)], 1);
+    assert_eq!(r[(1, 0)], 2);
+    assert_eq!(r[(0, 1)], 3);
+    assert_eq!(r[(1, 1)], 4);
+    assert_eq!(r[(0, 2)], 5);
+    assert_eq!(r[(1, 2)], 6);
+}

@@ -322,6 +322,149 @@ impl<T: Clone> Mat<T> {
     pub fn take_cols(&self, indices: &[usize]) -> Mat<T> {
         self.as_ref().take_cols(indices)
     }
+
+    pub fn reshape(&self, nrows: usize, ncols: usize) -> Mat<T> {
+        self.as_ref().reshape(nrows, ncols)
+    }
+
+    pub fn flatten(&self) -> Mat<T> {
+        self.as_ref().flatten()
+    }
+
+    pub fn flatten_row(&self) -> Mat<T> {
+        self.as_ref().flatten_row()
+    }
+
+    pub fn to_col_vector(&self) -> Mat<T> {
+        self.as_ref().to_col_vector()
+    }
+
+    pub fn to_row_vector(&self) -> Mat<T> {
+        self.as_ref().to_row_vector()
+    }
+
+    pub fn insert_row(&self, i: usize, row: &[T]) -> Mat<T> {
+        self.as_ref().insert_row(i, row)
+    }
+
+    pub fn insert_col(&self, j: usize, col: &[T]) -> Mat<T> {
+        self.as_ref().insert_col(j, col)
+    }
+
+    pub fn remove_row(&self, i: usize) -> Mat<T> {
+        self.as_ref().remove_row(i)
+    }
+
+    pub fn remove_col(&self, j: usize) -> Mat<T> {
+        self.as_ref().remove_col(j)
+    }
+
+    pub fn append_row(&self, row: &[T]) -> Mat<T> {
+        self.as_ref().append_row(row)
+    }
+
+    pub fn append_col(&self, col: &[T]) -> Mat<T> {
+        self.as_ref().append_col(col)
+    }
+
+    pub fn vstack(matrices: &[MatRef<'_, T>]) -> Mat<T> {
+        if matrices.is_empty() {
+            return Mat::new();
+        }
+        let ncols = matrices[0].ncols();
+        for (i, m) in matrices.iter().enumerate().skip(1) {
+            assert_eq!(
+                m.ncols(),
+                ncols,
+                "Matrix {} has {} columns, expected {}",
+                i,
+                m.ncols(),
+                ncols
+            );
+        }
+        let total_rows: usize = matrices.iter().map(|m| m.nrows()).sum();
+        let mut data = Vec::with_capacity(total_rows * ncols);
+        for j in 0..ncols {
+            for m in matrices {
+                for i in 0..m.nrows() {
+                    data.push(m.at(i, j).clone());
+                }
+            }
+        }
+        Mat::from_vec_col(total_rows, ncols, data)
+    }
+
+    pub fn hstack(matrices: &[MatRef<'_, T>]) -> Mat<T> {
+        if matrices.is_empty() {
+            return Mat::new();
+        }
+        let nrows = matrices[0].nrows();
+        for (i, m) in matrices.iter().enumerate().skip(1) {
+            assert_eq!(
+                m.nrows(),
+                nrows,
+                "Matrix {} has {} rows, expected {}",
+                i,
+                m.nrows(),
+                nrows
+            );
+        }
+        let total_cols: usize = matrices.iter().map(|m| m.ncols()).sum();
+        let mut data = Vec::with_capacity(nrows * total_cols);
+        for m in matrices {
+            for j in 0..m.ncols() {
+                for i in 0..nrows {
+                    data.push(m.at(i, j).clone());
+                }
+            }
+        }
+        Mat::from_vec_col(nrows, total_cols, data)
+    }
+
+    pub fn resize(&mut self, nrows: usize, ncols: usize, fill_value: T) {
+        let mut new_data = vec![fill_value; nrows * ncols];
+        let copy_rows = self.nrows.min(nrows);
+        let copy_cols = self.ncols.min(ncols);
+        for j in 0..copy_cols {
+            for i in 0..copy_rows {
+                new_data[i + j * nrows] = self.data[i + j * self.col_stride].clone();
+            }
+        }
+        self.data = new_data;
+        self.nrows = nrows;
+        self.ncols = ncols;
+        self.col_stride = nrows;
+    }
+
+    pub fn truncate(&mut self, nrows: usize, ncols: usize) {
+        assert!(
+            nrows <= self.nrows && ncols <= self.ncols,
+            "Cannot truncate {}x{} matrix to {}x{}",
+            self.nrows,
+            self.ncols,
+            nrows,
+            ncols
+        );
+        if nrows == self.nrows && ncols == self.ncols {
+            return;
+        }
+        let mut new_data = Vec::with_capacity(nrows * ncols);
+        for j in 0..ncols {
+            for i in 0..nrows {
+                new_data.push(self.data[i + j * self.col_stride].clone());
+            }
+        }
+        self.data = new_data;
+        self.nrows = nrows;
+        self.ncols = ncols;
+        self.col_stride = nrows;
+    }
+}
+
+impl<T> Mat<T> {
+    pub fn reserve(&mut self, additional_cols: usize) {
+        self.data.reserve(additional_cols * self.col_stride);
+    }
 }
 
 impl<T: Clone + Zero> Mat<T> {
