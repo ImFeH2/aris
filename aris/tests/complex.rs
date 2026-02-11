@@ -47,9 +47,9 @@ fn complex_conj() {
 }
 
 #[test]
-fn complex_hermitian_transpose() {
+fn complex_adjoint() {
     let m = mat![[c(1.0, 2.0), c(3.0, 4.0)], [c(5.0, 6.0), c(7.0, 8.0)]];
-    let ct = m.hermitian_transpose();
+    let ct = m.adjoint();
     assert_eq!(ct.shape(), (2, 2));
     assert_eq!(ct[(0, 0)], c(1.0, -2.0));
     assert_eq!(ct[(0, 1)], c(5.0, -6.0));
@@ -58,9 +58,9 @@ fn complex_hermitian_transpose() {
 }
 
 #[test]
-fn complex_hermitian_transpose_nonsquare() {
+fn complex_adjoint_nonsquare() {
     let m = mat![[c(1.0, 1.0), c(2.0, 2.0), c(3.0, 3.0)]];
-    let ct = m.hermitian_transpose();
+    let ct = m.adjoint();
     assert_eq!(ct.shape(), (3, 1));
     assert_eq!(ct[(0, 0)], c(1.0, -1.0));
     assert_eq!(ct[(1, 0)], c(2.0, -2.0));
