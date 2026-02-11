@@ -391,3 +391,90 @@ fn zeros_creates_zero_matrix() {
         }
     }
 }
+
+#[test]
+fn from_nested_vec_2x3() {
+    let rows = vec![vec![1, 2, 3], vec![4, 5, 6]];
+    let m = Mat::from_nested_vec(rows);
+    assert_eq!(m.shape(), (2, 3));
+    assert_eq!(m[(0, 0)], 1);
+    assert_eq!(m[(0, 1)], 2);
+    assert_eq!(m[(0, 2)], 3);
+    assert_eq!(m[(1, 0)], 4);
+    assert_eq!(m[(1, 1)], 5);
+    assert_eq!(m[(1, 2)], 6);
+}
+
+#[test]
+fn from_nested_vec_empty() {
+    let rows: Vec<Vec<i32>> = vec![];
+    let m = Mat::from_nested_vec(rows);
+    assert_eq!(m.shape(), (0, 0));
+    assert_eq!(m.size(), 0);
+}
+
+#[test]
+fn from_nested_vec_1x1() {
+    let rows = vec![vec![42]];
+    let m = Mat::from_nested_vec(rows);
+    assert_eq!(m.shape(), (1, 1));
+    assert_eq!(m[(0, 0)], 42);
+}
+
+#[test]
+fn from_nested_vec_3x2() {
+    let rows = vec![vec![1, 2], vec![3, 4], vec![5, 6]];
+    let m = Mat::from_nested_vec(rows);
+    assert_eq!(m.shape(), (3, 2));
+    assert_eq!(m, mat![[1, 2], [3, 4], [5, 6]]);
+}
+
+#[test]
+#[should_panic(expected = "Row 1 has 2 elements, expected 3")]
+fn from_nested_vec_inconsistent_row_length() {
+    let rows = vec![vec![1, 2, 3], vec![4, 5]];
+    Mat::from_nested_vec(rows);
+}
+
+#[test]
+fn from_iter_2x3() {
+    let m = Mat::from_iter(2, 3, 0..6);
+    assert_eq!(m.shape(), (2, 3));
+    assert_eq!(m, mat![[0, 2, 4], [1, 3, 5]]);
+}
+
+#[test]
+fn from_iter_3x3() {
+    let m = Mat::from_iter(3, 3, 1..10);
+    assert_eq!(m.shape(), (3, 3));
+    assert_eq!(m[(0, 0)], 1);
+    assert_eq!(m[(1, 0)], 2);
+    assert_eq!(m[(2, 0)], 3);
+    assert_eq!(m[(0, 1)], 4);
+    assert_eq!(m[(1, 1)], 5);
+    assert_eq!(m[(2, 1)], 6);
+    assert_eq!(m[(0, 2)], 7);
+    assert_eq!(m[(1, 2)], 8);
+    assert_eq!(m[(2, 2)], 9);
+}
+
+#[test]
+fn from_iter_1x5() {
+    let m = Mat::from_iter(1, 5, 10..15);
+    assert_eq!(m.shape(), (1, 5));
+    assert_eq!(m, mat![[10, 11, 12, 13, 14]]);
+}
+
+#[test]
+#[should_panic(expected = "Iterator produced 5 elements, expected 6")]
+fn from_iter_insufficient_elements() {
+    Mat::from_iter(2, 3, 0..5);
+}
+
+#[test]
+fn from_iter_with_iterator() {
+    let v = vec![1, 2, 3, 4];
+    let m = Mat::from_iter(2, 2, v.into_iter());
+    assert_eq!(m.shape(), (2, 2));
+    assert_eq!(m, mat![[1, 3], [2, 4]]);
+}

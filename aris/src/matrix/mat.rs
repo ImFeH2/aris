@@ -228,6 +228,51 @@ impl<T: Clone> Mat<T> {
         }
     }
 
+    pub fn from_nested_vec(rows: Vec<Vec<T>>) -> Self {
+        let nrows = rows.len();
+        if nrows == 0 {
+            return Self::new();
+        }
+        let ncols = rows[0].len();
+        for (i, row) in rows.iter().enumerate() {
+            assert_eq!(
+                row.len(),
+                ncols,
+                "Row {} has {} elements, expected {}",
+                i,
+                row.len(),
+                ncols
+            );
+        }
+        let mut data = Vec::with_capacity(nrows * ncols);
+        for j in 0..ncols {
+            for row in &rows {
+                data.push(row[j].clone());
+            }
+        }
+        Mat {
+            data,
+            nrows,
+            ncols,
+            col_stride: nrows,
+        }
+    }
+
+    pub fn from_iter<I>(nrows: usize, ncols: usize, iter: I) -> Self
+    where
+        I: IntoIterator<Item = T>,
+    {
+        let data: Vec<T> = iter.into_iter().take(nrows * ncols).collect();
+        assert_eq!(
+            data.len(),
+            nrows * ncols,
+            "Iterator produced {} elements, expected {}",
+            data.len(),
+            nrows * ncols
+        );
+        Mat::from_vec_col(nrows, ncols, data)
+    }
+
     pub fn from_blocks(block_rows: &[&[MatRef<'_, T>]]) -> Self {
         if block_rows.is_empty() {
             return Self::new();
