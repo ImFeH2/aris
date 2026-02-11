@@ -19,7 +19,7 @@ impl<'a, T: Clone + num_traits::Num + Neg<Output = T>> MatRef<'a, Complex<T>> {
         self.map(|x| x.conj())
     }
 
-    pub fn conj_transpose(self) -> Mat<Complex<T>> {
+    pub fn hermitian_transpose(self) -> Mat<Complex<T>> {
         self.transpose().conj()
     }
 
@@ -82,8 +82,8 @@ impl<T: Clone + num_traits::Num + Neg<Output = T>> MatMut<'_, Complex<T>> {
         self.rb().conj()
     }
 
-    pub fn conj_transpose(&self) -> Mat<Complex<T>> {
-        self.rb().conj_transpose()
+    pub fn hermitian_transpose(&self) -> Mat<Complex<T>> {
+        self.rb().hermitian_transpose()
     }
 
     pub fn is_hermitian(&self) -> bool
@@ -135,8 +135,8 @@ impl<T: Clone + num_traits::Num + Neg<Output = T>> Mat<Complex<T>> {
         self.as_ref().conj()
     }
 
-    pub fn conj_transpose(&self) -> Mat<Complex<T>> {
-        self.as_ref().conj_transpose()
+    pub fn hermitian_transpose(&self) -> Mat<Complex<T>> {
+        self.as_ref().hermitian_transpose()
     }
 
     pub fn is_hermitian(&self) -> bool
