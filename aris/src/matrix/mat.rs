@@ -893,6 +893,205 @@ impl<T: PartialEq> Mat<T> {
     pub fn is_symmetric(&self) -> bool {
         self.as_ref().is_symmetric()
     }
+
+    pub fn eq_element(&self, other: &Mat<T>) -> Mat<bool> {
+        assert_eq!(
+            self.shape(),
+            other.shape(),
+            "shape mismatch: {:?} vs {:?}",
+            self.shape(),
+            other.shape()
+        );
+        let (nrows, ncols) = self.shape();
+        let mut data = Vec::with_capacity(nrows * ncols);
+        for j in 0..ncols {
+            for i in 0..nrows {
+                data.push(self[(i, j)] == other[(i, j)]);
+            }
+        }
+        Mat::from_vec_col(nrows, ncols, data)
+    }
+
+    pub fn ne_element(&self, other: &Mat<T>) -> Mat<bool> {
+        assert_eq!(
+            self.shape(),
+            other.shape(),
+            "shape mismatch: {:?} vs {:?}",
+            self.shape(),
+            other.shape()
+        );
+        let (nrows, ncols) = self.shape();
+        let mut data = Vec::with_capacity(nrows * ncols);
+        for j in 0..ncols {
+            for i in 0..nrows {
+                data.push(self[(i, j)] != other[(i, j)]);
+            }
+        }
+        Mat::from_vec_col(nrows, ncols, data)
+    }
+}
+
+impl<T: PartialOrd> Mat<T> {
+    pub fn lt_element(&self, other: &Mat<T>) -> Mat<bool> {
+        assert_eq!(
+            self.shape(),
+            other.shape(),
+            "shape mismatch: {:?} vs {:?}",
+            self.shape(),
+            other.shape()
+        );
+        let (nrows, ncols) = self.shape();
+        let mut data = Vec::with_capacity(nrows * ncols);
+        for j in 0..ncols {
+            for i in 0..nrows {
+                data.push(self[(i, j)] < other[(i, j)]);
+            }
+        }
+        Mat::from_vec_col(nrows, ncols, data)
+    }
+
+    pub fn le_element(&self, other: &Mat<T>) -> Mat<bool> {
+        assert_eq!(
+            self.shape(),
+            other.shape(),
+            "shape mismatch: {:?} vs {:?}",
+            self.shape(),
+            other.shape()
+        );
+        let (nrows, ncols) = self.shape();
+        let mut data = Vec::with_capacity(nrows * ncols);
+        for j in 0..ncols {
+            for i in 0..nrows {
+                data.push(self[(i, j)] <= other[(i, j)]);
+            }
+        }
+        Mat::from_vec_col(nrows, ncols, data)
+    }
+
+    pub fn gt_element(&self, other: &Mat<T>) -> Mat<bool> {
+        assert_eq!(
+            self.shape(),
+            other.shape(),
+            "shape mismatch: {:?} vs {:?}",
+            self.shape(),
+            other.shape()
+        );
+        let (nrows, ncols) = self.shape();
+        let mut data = Vec::with_capacity(nrows * ncols);
+        for j in 0..ncols {
+            for i in 0..nrows {
+                data.push(self[(i, j)] > other[(i, j)]);
+            }
+        }
+        Mat::from_vec_col(nrows, ncols, data)
+    }
+
+    pub fn ge_element(&self, other: &Mat<T>) -> Mat<bool> {
+        assert_eq!(
+            self.shape(),
+            other.shape(),
+            "shape mismatch: {:?} vs {:?}",
+            self.shape(),
+            other.shape()
+        );
+        let (nrows, ncols) = self.shape();
+        let mut data = Vec::with_capacity(nrows * ncols);
+        for j in 0..ncols {
+            for i in 0..nrows {
+                data.push(self[(i, j)] >= other[(i, j)]);
+            }
+        }
+        Mat::from_vec_col(nrows, ncols, data)
+    }
+}
+
+impl Mat<bool> {
+    pub fn all(&self) -> bool {
+        for j in 0..self.ncols {
+            for i in 0..self.nrows {
+                if !self[(i, j)] {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+
+    pub fn any(&self) -> bool {
+        for j in 0..self.ncols {
+            for i in 0..self.nrows {
+                if self[(i, j)] {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    pub fn logical_and_element(&self, other: &Mat<bool>) -> Mat<bool> {
+        assert_eq!(
+            self.shape(),
+            other.shape(),
+            "shape mismatch: {:?} vs {:?}",
+            self.shape(),
+            other.shape()
+        );
+        let (nrows, ncols) = self.shape();
+        let mut data = Vec::with_capacity(nrows * ncols);
+        for j in 0..ncols {
+            for i in 0..nrows {
+                data.push(self[(i, j)] && other[(i, j)]);
+            }
+        }
+        Mat::from_vec_col(nrows, ncols, data)
+    }
+
+    pub fn logical_or_element(&self, other: &Mat<bool>) -> Mat<bool> {
+        assert_eq!(
+            self.shape(),
+            other.shape(),
+            "shape mismatch: {:?} vs {:?}",
+            self.shape(),
+            other.shape()
+        );
+        let (nrows, ncols) = self.shape();
+        let mut data = Vec::with_capacity(nrows * ncols);
+        for j in 0..ncols {
+            for i in 0..nrows {
+                data.push(self[(i, j)] || other[(i, j)]);
+            }
+        }
+        Mat::from_vec_col(nrows, ncols, data)
+    }
+
+    pub fn logical_xor_element(&self, other: &Mat<bool>) -> Mat<bool> {
+        assert_eq!(
+            self.shape(),
+            other.shape(),
+            "shape mismatch: {:?} vs {:?}",
+            self.shape(),
+            other.shape()
+        );
+        let (nrows, ncols) = self.shape();
+        let mut data = Vec::with_capacity(nrows * ncols);
+        for j in 0..ncols {
+            for i in 0..nrows {
+                data.push(self[(i, j)] ^ other[(i, j)]);
+            }
+        }
+        Mat::from_vec_col(nrows, ncols, data)
+    }
+
+    pub fn logical_not_element(&self) -> Mat<bool> {
+        let (nrows, ncols) = self.shape();
+        let mut data = Vec::with_capacity(nrows * ncols);
+        for j in 0..ncols {
+            for i in 0..nrows {
+                data.push(!self[(i, j)]);
+            }
+        }
+        Mat::from_vec_col(nrows, ncols, data)
+    }
 }
 
 impl<T: Zero> Mat<T> {
