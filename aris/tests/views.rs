@@ -100,7 +100,7 @@ fn cols_range_view() {
 #[test]
 fn complex_conj_on_view() {
     let m = mat![[c(1.0, 2.0), c(3.0, 4.0)], [c(5.0, 6.0), c(7.0, 8.0)]];
-    let sub = m.submatrix(0, 0, 1, 2);
+    let sub = m.view(0, 0, 1, 2);
     let conj = sub.conj();
     assert_eq!(conj, mat![[c(1.0, -2.0), c(3.0, -4.0)]]);
 }
@@ -108,7 +108,7 @@ fn complex_conj_on_view() {
 #[test]
 fn complex_norm_on_view() {
     let m = mat![[c(3.0, 4.0), c(0.0, 0.0)], [c(0.0, 0.0), c(5.0, 12.0)]];
-    let sub = m.submatrix(1, 1, 1, 1);
+    let sub = m.view(1, 1, 1, 1);
     let n = sub.norm();
     assert!((n[(0, 0)] - 13.0).abs() < 1e-10);
 }
@@ -283,10 +283,10 @@ fn mat_mut_strides() {
 }
 
 #[test]
-fn mat_mut_submatrix_readonly() {
+fn mat_mut_view_readonly() {
     let mut m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
     let v = m.as_mut();
-    let sub = v.submatrix(1, 0, 2, 2);
+    let sub = v.view(1, 0, 2, 2);
     assert_eq!(sub[(0, 0)], 4);
     assert_eq!(sub[(1, 1)], 8);
 }
@@ -387,9 +387,9 @@ fn mat_ref_row_col_views() {
 }
 
 #[test]
-fn mat_ref_submatrix() {
+fn mat_ref_view() {
     let m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
-    let sub = m.as_ref().submatrix(0, 1, 2, 2);
+    let sub = m.as_ref().view(0, 1, 2, 2);
     assert_eq!(sub[(0, 0)], 2);
     assert_eq!(sub[(1, 1)], 6);
 }
@@ -405,7 +405,7 @@ fn mat_ref_transpose() {
 #[test]
 fn math_on_view() {
     let a = mat![[1.0, 4.0, 9.0], [16.0, 25.0, 36.0]];
-    let sub = a.submatrix(0, 0, 2, 2);
+    let sub = a.view(0, 0, 2, 2);
     let b = sub.sqrt();
     assert_eq!(b, mat![[1.0, 2.0], [4.0, 5.0]]);
 }
@@ -660,30 +660,30 @@ fn split_at_row_out_of_bounds() {
 
 #[test]
 #[should_panic(expected = "Column range")]
-fn submatrix_col_out_of_bounds() {
+fn view_col_out_of_bounds() {
     let m = mat![[1, 2], [3, 4]];
-    m.submatrix(0, 1, 1, 2);
+    m.view(0, 1, 1, 2);
 }
 
 #[test]
-fn submatrix_empty() {
+fn view_empty() {
     let m = mat![[1, 2], [3, 4]];
-    let sub = m.submatrix(0, 0, 0, 0);
+    let sub = m.view(0, 0, 0, 0);
     assert_eq!(sub.shape(), (0, 0));
 }
 
 #[test]
-fn submatrix_full() {
+fn view_full() {
     let m = mat![[1, 2], [3, 4]];
-    let sub = m.submatrix(0, 0, 2, 2);
+    let sub = m.view(0, 0, 2, 2);
     assert_eq!(sub, m.as_ref());
 }
 
 #[test]
-fn submatrix_mut_view() {
+fn view_mut_view() {
     let mut m = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
     {
-        let mut sub = m.submatrix_mut(0, 1, 2, 2);
+        let mut sub = m.view_mut(0, 1, 2, 2);
         sub[(0, 0)] = 20;
         sub[(1, 1)] = 60;
     }
@@ -693,9 +693,9 @@ fn submatrix_mut_view() {
 }
 
 #[test]
-fn submatrix_of_transpose() {
+fn view_of_transpose() {
     let m = mat![[1, 2, 3], [4, 5, 6]];
-    let sub = m.transpose().submatrix(1, 0, 2, 2);
+    let sub = m.transpose().view(1, 0, 2, 2);
     assert_eq!(sub.shape(), (2, 2));
     assert_eq!(sub[(0, 0)], 2);
     assert_eq!(sub[(0, 1)], 5);
@@ -705,15 +705,15 @@ fn submatrix_of_transpose() {
 
 #[test]
 #[should_panic(expected = "Row range")]
-fn submatrix_row_out_of_bounds() {
+fn view_row_out_of_bounds() {
     let m = mat![[1, 2], [3, 4]];
-    m.submatrix(1, 0, 2, 1);
+    m.view(1, 0, 2, 1);
 }
 
 #[test]
-fn submatrix_view() {
+fn view_access() {
     let m = mat![[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]];
-    let sub = m.submatrix(1, 1, 2, 2);
+    let sub = m.view(1, 1, 2, 2);
     assert_eq!(sub.shape(), (2, 2));
     assert_eq!(sub[(0, 0)], 6);
     assert_eq!(sub[(0, 1)], 7);
@@ -764,7 +764,7 @@ fn transposed_view_to_owned() {
 #[test]
 fn view_to_owned() {
     let m = mat![[1, 2, 3], [4, 5, 6]];
-    let sub = m.submatrix(0, 1, 2, 2);
+    let sub = m.view(0, 1, 2, 2);
     let owned = sub.to_owned();
     assert_eq!(owned, mat![[2, 3], [5, 6]]);
 }

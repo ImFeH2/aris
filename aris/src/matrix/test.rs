@@ -72,9 +72,9 @@ fn strides_transpose() {
 }
 
 #[test]
-fn strides_submatrix() {
+fn strides_view() {
     let m = Mat::from_vec_col(5, 6, (0..30).collect());
-    let sub = m.submatrix(1, 2, 3, 2);
+    let sub = m.view(1, 2, 3, 2);
 
     assert_eq!(sub.row_stride(), 1);
     assert_eq!(sub.col_stride(), 5);

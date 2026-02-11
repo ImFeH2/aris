@@ -51,11 +51,11 @@ fn add_assign_matmut_ref_mat() {
 }
 
 #[test]
-fn add_assign_on_submatrix_view() {
+fn add_assign_on_view() {
     let mut a = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
     let b = mat![[10, 20], [30, 40]];
     {
-        let mut sub = a.as_mut().submatrix_mut(0, 0, 2, 2);
+        let mut sub = a.as_mut().view_mut(0, 0, 2, 2);
         sub += b.as_ref();
     }
     assert_eq!(a[(0, 0)], 11);
@@ -308,10 +308,10 @@ fn mul_assign_matmut_scalar() {
 }
 
 #[test]
-fn mul_assign_on_submatrix_view() {
+fn mul_assign_on_view() {
     let mut a = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
     {
-        let mut sub = a.as_mut().submatrix_mut(0, 0, 2, 2);
+        let mut sub = a.as_mut().view_mut(0, 0, 2, 2);
         sub *= 10;
     }
     assert_eq!(a[(0, 0)], 10);
@@ -440,10 +440,10 @@ fn ops_1x1_scalar_like() {
 }
 
 #[test]
-fn ops_with_submatrix_view() {
+fn ops_with_view() {
     let a = mat![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
     let b = mat![[10, 20], [30, 40]];
-    let sub = a.submatrix(0, 0, 2, 2);
+    let sub = a.view(0, 0, 2, 2);
     let c = sub + b.as_ref();
     assert_eq!(c, mat![[11, 22], [34, 45]]);
 }

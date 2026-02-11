@@ -187,14 +187,14 @@ impl<'a, T> MatMut<'a, T> {
     }
 
     #[inline]
-    pub fn submatrix(
+    pub fn view(
         &self,
         row_start: usize,
         col_start: usize,
         nrows: usize,
         ncols: usize,
     ) -> MatRef<'_, T> {
-        self.rb().submatrix(row_start, col_start, nrows, ncols)
+        self.rb().view(row_start, col_start, nrows, ncols)
     }
 
     #[inline]
@@ -282,7 +282,7 @@ impl<'a, T> MatMut<'a, T> {
     }
 
     #[inline]
-    pub fn submatrix_mut(
+    pub fn view_mut(
         self,
         row_start: usize,
         col_start: usize,
@@ -326,7 +326,7 @@ impl<'a, T> MatMut<'a, T> {
             range.end
         );
         let ncols = self.ncols;
-        self.submatrix_mut(range.start, 0, range.end - range.start, ncols)
+        self.view_mut(range.start, 0, range.end - range.start, ncols)
     }
 
     #[inline]
@@ -338,7 +338,7 @@ impl<'a, T> MatMut<'a, T> {
             range.end
         );
         let nrows = self.nrows;
-        self.submatrix_mut(0, range.start, nrows, range.end - range.start)
+        self.view_mut(0, range.start, nrows, range.end - range.start)
     }
 
     pub fn split_at_row_mut(self, i: usize) -> (MatMut<'a, T>, MatMut<'a, T>) {

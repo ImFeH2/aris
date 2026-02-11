@@ -648,14 +648,14 @@ impl<T> Mat<T> {
     }
 
     #[inline]
-    pub fn submatrix(
+    pub fn view(
         &self,
         row_start: usize,
         col_start: usize,
         nrows: usize,
         ncols: usize,
     ) -> MatRef<'_, T> {
-        self.as_ref().submatrix(row_start, col_start, nrows, ncols)
+        self.as_ref().view(row_start, col_start, nrows, ncols)
     }
 
     #[inline]
@@ -709,15 +709,14 @@ impl<T> Mat<T> {
     }
 
     #[inline]
-    pub fn submatrix_mut(
+    pub fn view_mut(
         &mut self,
         row_start: usize,
         col_start: usize,
         nrows: usize,
         ncols: usize,
     ) -> MatMut<'_, T> {
-        self.as_mut()
-            .submatrix_mut(row_start, col_start, nrows, ncols)
+        self.as_mut().view_mut(row_start, col_start, nrows, ncols)
     }
 
     #[inline]

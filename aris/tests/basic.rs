@@ -43,10 +43,10 @@ fn copy_from_shape_mismatch() {
 }
 
 #[test]
-fn copy_from_to_submatrix() {
+fn copy_from_to_view() {
     let src = mat![[10, 20], [30, 40]];
     let mut dst = Mat::zeros(4, 4);
-    dst.submatrix_mut(1, 1, 2, 2).copy_from(src.as_ref());
+    dst.view_mut(1, 1, 2, 2).copy_from(src.as_ref());
     assert_eq!(dst[(0, 0)], 0);
     assert_eq!(dst[(1, 1)], 10);
     assert_eq!(dst[(1, 2)], 20);
@@ -95,9 +95,9 @@ fn fill_entire_matrix() {
 }
 
 #[test]
-fn fill_submatrix() {
+fn fill_view() {
     let mut m = Mat::zeros(3, 3);
-    m.submatrix_mut(0, 0, 2, 2).fill(5);
+    m.view_mut(0, 0, 2, 2).fill(5);
     assert_eq!(m[(0, 0)], 5);
     assert_eq!(m[(0, 1)], 5);
     assert_eq!(m[(1, 0)], 5);

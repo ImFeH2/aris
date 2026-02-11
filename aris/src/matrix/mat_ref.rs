@@ -178,7 +178,7 @@ impl<'a, T> MatRef<'a, T> {
     }
 
     #[inline]
-    pub fn submatrix(
+    pub fn view(
         self,
         row_start: usize,
         col_start: usize,
@@ -217,7 +217,7 @@ impl<'a, T> MatRef<'a, T> {
             range.start,
             range.end
         );
-        self.submatrix(range.start, 0, range.end - range.start, self.ncols)
+        self.view(range.start, 0, range.end - range.start, self.ncols)
     }
 
     #[inline]
@@ -228,7 +228,7 @@ impl<'a, T> MatRef<'a, T> {
             range.start,
             range.end
         );
-        self.submatrix(0, range.start, self.nrows, range.end - range.start)
+        self.view(0, range.start, self.nrows, range.end - range.start)
     }
 
     #[inline]
@@ -240,8 +240,8 @@ impl<'a, T> MatRef<'a, T> {
             self.nrows
         );
         (
-            self.submatrix(0, 0, i, self.ncols),
-            self.submatrix(i, 0, self.nrows - i, self.ncols),
+            self.view(0, 0, i, self.ncols),
+            self.view(i, 0, self.nrows - i, self.ncols),
         )
     }
 
@@ -254,8 +254,8 @@ impl<'a, T> MatRef<'a, T> {
             self.ncols
         );
         (
-            self.submatrix(0, 0, self.nrows, j),
-            self.submatrix(0, j, self.nrows, self.ncols - j),
+            self.view(0, 0, self.nrows, j),
+            self.view(0, j, self.nrows, self.ncols - j),
         )
     }
 
