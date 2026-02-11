@@ -629,20 +629,6 @@ impl<'a, T: Clone> MatRef<'a, T> {
         self.insert_col(ncols, col)
     }
 
-    pub fn element_mul(self, other: MatRef<'_, T>) -> Mat<T>
-    where
-        T: std::ops::Mul<Output = T>,
-    {
-        self.zip_map(other, |a, b| a.clone() * b.clone())
-    }
-
-    pub fn element_div(self, other: MatRef<'_, T>) -> Mat<T>
-    where
-        T: std::ops::Div<Output = T>,
-    {
-        self.zip_map(other, |a, b| a.clone() / b.clone())
-    }
-
     pub fn clamp(self, min: T, max: T) -> Mat<T>
     where
         T: PartialOrd,

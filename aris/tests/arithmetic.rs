@@ -237,52 +237,12 @@ fn arithmetic_chain() {
 }
 
 #[test]
-fn complex_element_mul() {
-    let a = mat![[c(1.0, 0.0), c(0.0, 1.0)]];
-    let b = mat![[c(0.0, 1.0), c(0.0, 1.0)]];
-    let result = a.element_mul(b.as_ref());
-    assert_eq!(result, mat![[c(0.0, 1.0), c(-1.0, 0.0)]]);
-}
-
-#[test]
 fn complex_scalar_mul() {
     let a = mat![[c(1.0, 2.0), c(3.0, 4.0)]];
     let result = &a * c(2.0, 0.0);
     assert_eq!(result, mat![[c(2.0, 4.0), c(6.0, 8.0)]]);
     let result2 = &a * c(0.0, 1.0);
     assert_eq!(result2, mat![[c(-2.0, 1.0), c(-4.0, 3.0)]]);
-}
-
-#[test]
-fn component_div_basic() {
-    let a = mat![[10, 20], [30, 40]];
-    let b = mat![[2, 5], [6, 8]];
-    let c = a.element_div(b.as_ref());
-    assert_eq!(c, mat![[5, 4], [5, 5]]);
-}
-
-#[test]
-fn component_div_f64() {
-    let a = mat![[1.0, 2.0], [3.0, 4.0]];
-    let b = mat![[2.0, 4.0], [6.0, 8.0]];
-    let c = a.as_ref().element_div(b.as_ref());
-    assert_eq!(c, mat![[0.5, 0.5], [0.5, 0.5]]);
-}
-
-#[test]
-fn element_mul_basic() {
-    let a = mat![[1, 2], [3, 4]];
-    let b = mat![[5, 6], [7, 8]];
-    let c = a.element_mul(b.as_ref());
-    assert_eq!(c, mat![[5, 12], [21, 32]]);
-}
-
-#[test]
-fn element_mul_matref() {
-    let a = mat![[2.0, 3.0], [4.0, 5.0]];
-    let b = mat![[0.5, 2.0], [0.25, 0.2]];
-    let c = a.as_ref().element_mul(b.as_ref());
-    assert_eq!(c, mat![[1.0, 6.0], [1.0, 1.0]]);
 }
 
 #[test]
