@@ -412,18 +412,18 @@ impl<T: Clone> Mat<T> {
         self.as_ref().append_col(col)
     }
 
-    pub fn component_mul(&self, other: MatRef<'_, T>) -> Mat<T>
+    pub fn element_mul(&self, other: MatRef<'_, T>) -> Mat<T>
     where
         T: std::ops::Mul<Output = T>,
     {
-        self.as_ref().component_mul(other)
+        self.as_ref().element_mul(other)
     }
 
-    pub fn component_div(&self, other: MatRef<'_, T>) -> Mat<T>
+    pub fn element_div(&self, other: MatRef<'_, T>) -> Mat<T>
     where
         T: std::ops::Div<Output = T>,
     {
-        self.as_ref().component_div(other)
+        self.as_ref().element_div(other)
     }
 
     pub fn clamp(&self, min: T, max: T) -> Mat<T>

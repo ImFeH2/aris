@@ -629,14 +629,14 @@ impl<'a, T: Clone> MatRef<'a, T> {
         self.insert_col(ncols, col)
     }
 
-    pub fn component_mul(self, other: MatRef<'_, T>) -> Mat<T>
+    pub fn element_mul(self, other: MatRef<'_, T>) -> Mat<T>
     where
         T: std::ops::Mul<Output = T>,
     {
         self.zip_map(other, |a, b| a.clone() * b.clone())
     }
 
-    pub fn component_div(self, other: MatRef<'_, T>) -> Mat<T>
+    pub fn element_div(self, other: MatRef<'_, T>) -> Mat<T>
     where
         T: std::ops::Div<Output = T>,
     {

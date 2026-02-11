@@ -605,18 +605,18 @@ impl<T: Clone> MatMut<'_, T> {
         self.rb().append_col(col)
     }
 
-    pub fn component_mul(&self, other: MatRef<'_, T>) -> Mat<T>
+    pub fn element_mul(&self, other: MatRef<'_, T>) -> Mat<T>
     where
         T: std::ops::Mul<Output = T>,
     {
-        self.rb().component_mul(other)
+        self.rb().element_mul(other)
     }
 
-    pub fn component_div(&self, other: MatRef<'_, T>) -> Mat<T>
+    pub fn element_div(&self, other: MatRef<'_, T>) -> Mat<T>
     where
         T: std::ops::Div<Output = T>,
     {
-        self.rb().component_div(other)
+        self.rb().element_div(other)
     }
 
     pub fn clamp(&self, min: T, max: T) -> Mat<T>
