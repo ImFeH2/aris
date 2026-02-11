@@ -871,6 +871,418 @@ impl<T: num_traits::Float> Mat<T> {
     pub fn round(&self) -> Mat<T> {
         self.as_ref().round()
     }
+
+    pub fn mean(&self) -> T {
+        assert!(!self.is_empty(), "cannot compute mean of empty matrix");
+        let sum = self.sum();
+        let n = T::from(self.size()).unwrap();
+        sum / n
+    }
+
+    pub fn variance(&self) -> T {
+        assert!(!self.is_empty(), "cannot compute variance of empty matrix");
+        let mean = self.mean();
+        let mut sum_sq_diff = T::zero();
+        for j in 0..self.ncols {
+            for i in 0..self.nrows {
+                let diff = self[(i, j)] - mean;
+                sum_sq_diff = sum_sq_diff + diff * diff;
+            }
+        }
+        let n = T::from(self.size()).unwrap();
+        sum_sq_diff / n
+    }
+
+    pub fn std_dev(&self) -> T {
+        self.variance().sqrt()
+    }
+
+    pub fn mean_rows(&self) -> Mat<T> {
+        let (nrows, ncols) = self.shape();
+        let n = T::from(ncols).unwrap();
+        let mut result = Mat::zeros(nrows, 1);
+        for i in 0..nrows {
+            let mut sum = T::zero();
+            for j in 0..ncols {
+                sum = sum + self[(i, j)];
+            }
+            result[(i, 0)] = sum / n;
+        }
+        result
+    }
+
+    pub fn mean_cols(&self) -> Mat<T> {
+        let (nrows, ncols) = self.shape();
+        let n = T::from(nrows).unwrap();
+        let mut result = Mat::zeros(1, ncols);
+        for j in 0..ncols {
+            let mut sum = T::zero();
+            for i in 0..nrows {
+                sum = sum + self[(i, j)];
+            }
+            result[(0, j)] = sum / n;
+        }
+        result
+    }
+}
+
+impl<T: Clone + std::ops::Add<Output = T> + Zero> Mat<T> {
+    pub fn sum(&self) -> T {
+        let mut result = T::zero();
+        for j in 0..self.ncols {
+            for i in 0..self.nrows {
+                result = result + self[(i, j)].clone();
+            }
+        }
+        result
+    }
+
+    pub fn sum_rows(&self) -> Mat<T> {
+        let (nrows, ncols) = self.shape();
+        let mut result = Mat::zeros(nrows, 1);
+        for i in 0..nrows {
+            let mut sum = T::zero();
+            for j in 0..ncols {
+                sum = sum + self[(i, j)].clone();
+            }
+            result[(i, 0)] = sum;
+        }
+        result
+    }
+
+    pub fn sum_cols(&self) -> Mat<T> {
+        let (nrows, ncols) = self.shape();
+        let mut result = Mat::zeros(1, ncols);
+        for j in 0..ncols {
+            let mut sum = T::zero();
+            for i in 0..nrows {
+                sum = sum + self[(i, j)].clone();
+            }
+            result[(0, j)] = sum;
+        }
+        result
+    }
+
+    pub fn cumsum_col(&self) -> Mat<T> {
+        let (nrows, ncols) = self.shape();
+        let mut result = Mat::zeros(nrows, ncols);
+        for j in 0..ncols {
+            let mut sum = T::zero();
+            for i in 0..nrows {
+                sum = sum + self[(i, j)].clone();
+                result[(i, j)] = sum.clone();
+            }
+        }
+        result
+    }
+
+    pub fn cumsum_row(&self) -> Mat<T> {
+        let (nrows, ncols) = self.shape();
+        let mut result = Mat::zeros(nrows, ncols);
+        for i in 0..nrows {
+            let mut sum = T::zero();
+            for j in 0..ncols {
+                sum = sum + self[(i, j)].clone();
+                result[(i, j)] = sum.clone();
+            }
+        }
+        result
+    }
+}
+
+impl<T: Clone + std::ops::Mul<Output = T> + One> Mat<T> {
+    pub fn prod(&self) -> T {
+        let mut result = T::one();
+        for j in 0..self.ncols {
+            for i in 0..self.nrows {
+                result = result * self[(i, j)].clone();
+            }
+        }
+        result
+    }
+
+    pub fn cumprod_col(&self) -> Mat<T> {
+        let (nrows, ncols) = self.shape();
+        let mut result = Mat::ones(nrows, ncols);
+        for j in 0..ncols {
+            let mut prod = T::one();
+            for i in 0..nrows {
+                prod = prod * self[(i, j)].clone();
+                result[(i, j)] = prod.clone();
+            }
+        }
+        result
+    }
+
+    pub fn cumprod_row(&self) -> Mat<T> {
+        let (nrows, ncols) = self.shape();
+        let mut result = Mat::ones(nrows, ncols);
+        for i in 0..nrows {
+            let mut prod = T::one();
+            for j in 0..ncols {
+                prod = prod * self[(i, j)].clone();
+                result[(i, j)] = prod.clone();
+            }
+        }
+        result
+    }
+}
+
+impl<T: PartialOrd + Clone> Mat<T> {
+    pub fn min(&self) -> T {
+        assert!(!self.is_empty(), "cannot compute min of empty matrix");
+        let mut min_val = self[(0, 0)].clone();
+        for j in 0..self.ncols {
+            for i in 0..self.nrows {
+                if self[(i, j)] < min_val {
+                    min_val = self[(i, j)].clone();
+                }
+            }
+        }
+        min_val
+    }
+
+    pub fn max(&self) -> T {
+        assert!(!self.is_empty(), "cannot compute max of empty matrix");
+        let mut max_val = self[(0, 0)].clone();
+        for j in 0..self.ncols {
+            for i in 0..self.nrows {
+                if self[(i, j)] > max_val {
+                    max_val = self[(i, j)].clone();
+                }
+            }
+        }
+        max_val
+    }
+
+    pub fn min_max(&self) -> (T, T) {
+        assert!(!self.is_empty(), "cannot compute min_max of empty matrix");
+        let mut min_val = self[(0, 0)].clone();
+        let mut max_val = self[(0, 0)].clone();
+        for j in 0..self.ncols {
+            for i in 0..self.nrows {
+                if self[(i, j)] < min_val {
+                    min_val = self[(i, j)].clone();
+                }
+                if self[(i, j)] > max_val {
+                    max_val = self[(i, j)].clone();
+                }
+            }
+        }
+        (min_val, max_val)
+    }
+
+    pub fn min_rows(&self) -> Mat<T> {
+        let (nrows, ncols) = self.shape();
+        assert!(
+            ncols > 0,
+            "cannot compute min_rows of matrix with 0 columns"
+        );
+        let mut result = Vec::with_capacity(nrows);
+        for i in 0..nrows {
+            let mut min_val = self[(i, 0)].clone();
+            for j in 1..ncols {
+                if self[(i, j)] < min_val {
+                    min_val = self[(i, j)].clone();
+                }
+            }
+            result.push(min_val);
+        }
+        Mat::from_vec_col(nrows, 1, result)
+    }
+
+    pub fn min_cols(&self) -> Mat<T> {
+        let (nrows, ncols) = self.shape();
+        assert!(nrows > 0, "cannot compute min_cols of matrix with 0 rows");
+        let mut result = Vec::with_capacity(ncols);
+        for j in 0..ncols {
+            let mut min_val = self[(0, j)].clone();
+            for i in 1..nrows {
+                if self[(i, j)] < min_val {
+                    min_val = self[(i, j)].clone();
+                }
+            }
+            result.push(min_val);
+        }
+        Mat::from_vec_row(1, ncols, result)
+    }
+
+    pub fn max_rows(&self) -> Mat<T> {
+        let (nrows, ncols) = self.shape();
+        assert!(
+            ncols > 0,
+            "cannot compute max_rows of matrix with 0 columns"
+        );
+        let mut result = Vec::with_capacity(nrows);
+        for i in 0..nrows {
+            let mut max_val = self[(i, 0)].clone();
+            for j in 1..ncols {
+                if self[(i, j)] > max_val {
+                    max_val = self[(i, j)].clone();
+                }
+            }
+            result.push(max_val);
+        }
+        Mat::from_vec_col(nrows, 1, result)
+    }
+
+    pub fn max_cols(&self) -> Mat<T> {
+        let (nrows, ncols) = self.shape();
+        assert!(nrows > 0, "cannot compute max_cols of matrix with 0 rows");
+        let mut result = Vec::with_capacity(ncols);
+        for j in 0..ncols {
+            let mut max_val = self[(0, j)].clone();
+            for i in 1..nrows {
+                if self[(i, j)] > max_val {
+                    max_val = self[(i, j)].clone();
+                }
+            }
+            result.push(max_val);
+        }
+        Mat::from_vec_row(1, ncols, result)
+    }
+
+    pub fn argmin(&self) -> (usize, usize) {
+        assert!(!self.is_empty(), "cannot compute argmin of empty matrix");
+        let mut min_pos = (0, 0);
+        let mut min_val = &self[(0, 0)];
+        for j in 0..self.ncols {
+            for i in 0..self.nrows {
+                if &self[(i, j)] < min_val {
+                    min_val = &self[(i, j)];
+                    min_pos = (i, j);
+                }
+            }
+        }
+        min_pos
+    }
+
+    pub fn argmax(&self) -> (usize, usize) {
+        assert!(!self.is_empty(), "cannot compute argmax of empty matrix");
+        let mut max_pos = (0, 0);
+        let mut max_val = &self[(0, 0)];
+        for j in 0..self.ncols {
+            for i in 0..self.nrows {
+                if &self[(i, j)] > max_val {
+                    max_val = &self[(i, j)];
+                    max_pos = (i, j);
+                }
+            }
+        }
+        max_pos
+    }
+
+    pub fn argmin_col(&self) -> Vec<usize> {
+        let (nrows, ncols) = self.shape();
+        assert!(nrows > 0, "cannot compute argmin_col of matrix with 0 rows");
+        let mut result = Vec::with_capacity(ncols);
+        for j in 0..ncols {
+            let mut min_idx = 0;
+            let mut min_val = &self[(0, j)];
+            for i in 1..nrows {
+                if &self[(i, j)] < min_val {
+                    min_val = &self[(i, j)];
+                    min_idx = i;
+                }
+            }
+            result.push(min_idx);
+        }
+        result
+    }
+
+    pub fn argmax_col(&self) -> Vec<usize> {
+        let (nrows, ncols) = self.shape();
+        assert!(nrows > 0, "cannot compute argmax_col of matrix with 0 rows");
+        let mut result = Vec::with_capacity(ncols);
+        for j in 0..ncols {
+            let mut max_idx = 0;
+            let mut max_val = &self[(0, j)];
+            for i in 1..nrows {
+                if &self[(i, j)] > max_val {
+                    max_val = &self[(i, j)];
+                    max_idx = i;
+                }
+            }
+            result.push(max_idx);
+        }
+        result
+    }
+
+    pub fn argmin_row(&self) -> Vec<usize> {
+        let (nrows, ncols) = self.shape();
+        assert!(
+            ncols > 0,
+            "cannot compute argmin_row of matrix with 0 columns"
+        );
+        let mut result = Vec::with_capacity(nrows);
+        for i in 0..nrows {
+            let mut min_idx = 0;
+            let mut min_val = &self[(i, 0)];
+            for j in 1..ncols {
+                if &self[(i, j)] < min_val {
+                    min_val = &self[(i, j)];
+                    min_idx = j;
+                }
+            }
+            result.push(min_idx);
+        }
+        result
+    }
+
+    pub fn argmax_row(&self) -> Vec<usize> {
+        let (nrows, ncols) = self.shape();
+        assert!(
+            ncols > 0,
+            "cannot compute argmax_row of matrix with 0 columns"
+        );
+        let mut result = Vec::with_capacity(nrows);
+        for i in 0..nrows {
+            let mut max_idx = 0;
+            let mut max_val = &self[(i, 0)];
+            for j in 1..ncols {
+                if &self[(i, j)] > max_val {
+                    max_val = &self[(i, j)];
+                    max_idx = j;
+                }
+            }
+            result.push(max_idx);
+        }
+        result
+    }
+
+    pub fn sort_rows_by_col(&self, j: usize) -> Mat<T> {
+        assert!(
+            j < self.ncols,
+            "column index {} out of bounds for matrix with {} columns",
+            j,
+            self.ncols
+        );
+        let nrows = self.nrows;
+        let mut indices: Vec<usize> = (0..nrows).collect();
+        indices.sort_by(|&i1, &i2| {
+            self[(i1, j)]
+                .partial_cmp(&self[(i2, j)])
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        self.take_rows(&indices)
+    }
+
+    pub fn sort_cols_by_row(&self, i: usize) -> Mat<T> {
+        assert!(
+            i < self.nrows,
+            "row index {} out of bounds for matrix with {} rows",
+            i,
+            self.nrows
+        );
+        let ncols = self.ncols;
+        let mut indices: Vec<usize> = (0..ncols).collect();
+        indices.sort_by(|&j1, &j2| {
+            self[(i, j1)]
+                .partial_cmp(&self[(i, j2)])
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        self.take_cols(&indices)
+    }
 }
 
 impl<T: PartialEq> Mat<T> {
