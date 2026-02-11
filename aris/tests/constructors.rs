@@ -474,7 +474,7 @@ fn from_iter_insufficient_elements() {
 #[test]
 fn from_iter_with_iterator() {
     let v = vec![1, 2, 3, 4];
-    let m = Mat::from_iter(2, 2, v.into_iter());
+    let m = Mat::from_iter(2, 2, v);
     assert_eq!(m.shape(), (2, 2));
     assert_eq!(m, mat![[1, 3], [2, 4]]);
 }
