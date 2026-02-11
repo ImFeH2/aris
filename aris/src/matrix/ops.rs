@@ -1,5 +1,7 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
+use num_complex::Complex;
+
 use super::{Mat, MatMut, MatRef};
 
 macro_rules! impl_mat_mat_binop {
@@ -275,6 +277,8 @@ impl_scalar_lmul!(u64);
 impl_scalar_lmul!(u128);
 impl_scalar_lmul!(isize);
 impl_scalar_lmul!(usize);
+impl_scalar_lmul!(Complex<f32>);
+impl_scalar_lmul!(Complex<f64>);
 
 impl<T: Clone + Neg<Output = T>> Neg for MatRef<'_, T> {
     type Output = Mat<T>;

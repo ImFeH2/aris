@@ -13,3 +13,4 @@ categories = ["mathematics", "algorithms"]
 
 [dependencies]
 num-traits = "0.2"
+num-complex = "0.4"
