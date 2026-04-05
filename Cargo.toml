@@ -10,7 +10,3 @@ license = "Apache-2.0"
 readme = "README.md"
 keywords = ["mathematics", "math", "numeric", "computing"]
 categories = ["mathematics", "algorithms"]
-
-[dependencies]
-num-traits = "0.2"
-num-complex = "0.4"
