@@ -8,8 +8,10 @@ dynamic = ["version"]
 description = "Command-line interface for Aris"
 readme = { text = "Command-line interface for Aris.", content-type = "text/markdown" }
 requires-python = ">=3.9"
+license = "Apache-2.0"
 classifiers = [
     "Environment :: Console",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Rust",
     "Topic :: Scientific/Engineering :: Mathematics",
 ]

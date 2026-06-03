@@ -42,6 +42,7 @@ dev = [
 ]
 
 [tool.maturin]
+include = [{ path = "LICENSE", format = "sdist" }]
 manifest-path = "python/Cargo.toml"
 python-source = "python"
 module-name = "aris._aris"
