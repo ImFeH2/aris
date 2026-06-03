@@ -1,0 +1,20 @@
+repos:
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: Check Rust formatting
+        entry: cargo fmt --check
+        language: system
+        pass_filenames: false
+
+      - id: cargo-clippy
+        name: Run Rust lints
+        entry: cargo clippy --all-targets --all-features -- -D warnings
+        language: system
+        pass_filenames: false
+
+      - id: cargo-test
+        name: Run Rust tests
+        entry: cargo test --all-features
+        language: system
+        pass_filenames: false
