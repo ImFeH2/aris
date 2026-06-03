@@ -1,0 +1,8 @@
+allow-branch = ["main"]
+consolidate-commits = true
+dependent-version = "upgrade"
+pre-release-commit-message = "chore: release {{version}}"
+publish = false
+push = true
+tag-message = "chore: release {{version}}"
+tag-name = "v{{version}}"
