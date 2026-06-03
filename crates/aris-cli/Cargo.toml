@@ -1,0 +1,17 @@
+[package]
+name = "aris-cli"
+version.workspace = true
+edition.workspace = true
+description = "Command-line interface for Aris"
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
+keywords = ["mathematics", "math", "computing", "cli"]
+categories = ["command-line-utilities", "mathematics"]
+
+[[bin]]
+name = "aris"
+path = "src/main.rs"
+
+[dependencies]

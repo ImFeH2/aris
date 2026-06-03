@@ -1,0 +1,3 @@
+def add(a: float, b: float) -> float: ...
+
+__all__ = ["add"]

@@ -1,0 +1,17 @@
+[package]
+name = "aris-python"
+version.workspace = true
+edition.workspace = true
+description = "Python bindings for Aris"
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+name = "_aris"
+crate-type = ["cdylib"]
+
+[dependencies]
+aris.workspace = true
+pyo3 = "0.28.3"

@@ -1,0 +1,14 @@
+[package]
+name = "aris"
+version.workspace = true
+edition.workspace = true
+description = "A mathematical computing library"
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
+documentation = "https://docs.rs/aris"
+keywords = ["mathematics", "math", "numeric", "computing"]
+categories = ["mathematics", "algorithms"]
+
+[dependencies]

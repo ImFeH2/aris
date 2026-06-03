@@ -1,12 +1,14 @@
-[package]
-name = "aris"
+[workspace]
+resolver = "3"
+members = ["crates/aris", "crates/aris-cli", "python"]
+
+[workspace.package]
 version = "0.1.0"
 edition = "2024"
 authors = ["ImFeH2 <i@feh2.im>"]
-description = "A mathematical computing library"
-repository = "https://github.com/ImFeH2/aris"
-documentation = "https://docs.rs/aris"
 license = "Apache-2.0"
+repository = "https://github.com/ImFeH2/aris"
 readme = "README.md"
-keywords = ["mathematics", "math", "numeric", "computing"]
-categories = ["mathematics", "algorithms"]
+
+[workspace.dependencies]
+aris = { path = "crates/aris" }

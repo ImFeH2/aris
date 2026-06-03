@@ -1,0 +1,18 @@
+[build-system]
+requires = ["maturin>=1.13,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "aris-cli"
+dynamic = ["version"]
+description = "Command-line interface for Aris"
+readme = { text = "Command-line interface for Aris.", content-type = "text/markdown" }
+requires-python = ">=3.9"
+classifiers = [
+    "Environment :: Console",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+
+[tool.maturin]
+bindings = "bin"

@@ -1,4 +1,16 @@
-/target/
+target/
+
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+*.py[cod]
+*.so
+
+/dist/
+/build/
+*.egg-info/
 
 .vscode/
 .idea/

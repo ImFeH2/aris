@@ -1,20 +1,55 @@
+default_install_hook_types:
+  - pre-commit
+default_stages:
+  - pre-commit
+
 repos:
   - repo: local
     hooks:
       - id: cargo-fmt
-        name: Check Rust formatting
-        entry: cargo fmt --check
+        name: Format Rust code
+        entry: cargo fmt --all
+        language: system
+        pass_filenames: false
+
+      - id: python-lint
+        name: Fix Python lints
+        entry: uv run ruff check --fix --exit-non-zero-on-fix python
+        language: system
+        pass_filenames: false
+
+      - id: python-format
+        name: Format Python code
+        entry: uv run ruff format python
+        language: system
+        pass_filenames: false
+
+      - id: python-typecheck
+        name: Run Python type checks
+        entry: uv run mypy python/aris python/tests
         language: system
         pass_filenames: false
 
       - id: cargo-clippy
         name: Run Rust lints
-        entry: cargo clippy --all-targets --all-features -- -D warnings
+        entry: cargo clippy --workspace --all-targets --all-features -- -D warnings
         language: system
         pass_filenames: false
 
       - id: cargo-test
         name: Run Rust tests
-        entry: cargo test --all-features
+        entry: cargo test --workspace --all-features
+        language: system
+        pass_filenames: false
+
+      - id: python-test
+        name: Run Python tests
+        entry: uv run pytest python/tests
+        language: system
+        pass_filenames: false
+
+      - id: python-stubtest
+        name: Check Python stubs
+        entry: uv run stubtest aris
         language: system
         pass_filenames: false
