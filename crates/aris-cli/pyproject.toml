@@ -9,12 +9,28 @@ description = "Command-line interface for Aris"
 readme = { text = "Command-line interface for Aris.", content-type = "text/markdown" }
 requires-python = ">=3.9"
 license = "Apache-2.0"
+authors = [{ name = "ImFeH2", email = "i@feh2.im" }]
+keywords = ["mathematics", "math", "computing", "cli"]
 classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
     "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Rust",
     "Topic :: Scientific/Engineering :: Mathematics",
 ]
+
+[project.urls]
+Homepage = "https://github.com/ImFeH2/aris"
+Repository = "https://github.com/ImFeH2/aris"
 
 [tool.maturin]
 bindings = "bin"
