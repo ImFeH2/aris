@@ -3,7 +3,7 @@ requires = ["maturin>=1.13,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "aris"
+name = "aris-lib"
 dynamic = ["version"]
 description = "A mathematical computing library"
 readme = "README.md"

@@ -143,7 +143,7 @@ jobs:
       - publish-crates
     environment:
       name: pypi
-      url: https://pypi.org/p/aris
+      url: https://pypi.org/p/aris-lib
     permissions:
       actions: read
       id-token: write

@@ -8,7 +8,7 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "aris"
+name = "aris-lib"
 source = { editable = "." }
 
 [package.dev-dependencies]
