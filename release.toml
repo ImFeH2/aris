@@ -4,5 +4,7 @@ dependent-version = "upgrade"
 pre-release-commit-message = "chore: release {{version}}"
 publish = false
 push = true
+sign-commit = true
+sign-tag = true
 tag-message = "chore: release {{version}}"
 tag-name = "v{{version}}"
